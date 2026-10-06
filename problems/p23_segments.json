@@ -1,0 +1,32 @@
+{
+  "id": "p23_segments",
+  "order": 23,
+  "title": "七段码",
+  "type": "fill",
+  "difficulty": "较难",
+  "score": 10,
+  "tags": [
+    "并查集",
+    "连通性",
+    "枚举"
+  ],
+  "chapter": "第 10 章 08（并查集与七段码）",
+  "source": "蓝桥杯省赛真题（题意整理）",
+  "statement": "<p>一个七段数码管有 a 到 g 七个段，位置是：</p><pre> aaa\nf   b\n ggg\ne   c\n ddd</pre><p>点亮其中若干个段就表示一个字符。要求亮着的段必须<strong>首尾相连</strong>成一个整体（两个段有公共端点就算相连），散成两块就不算。比如只亮 a 和 d 不行，因为它们挨不着。</p><p>问一共能点亮多少种合法的连通字符（至少要亮一个段，全灭不算）。</p>",
+  "input_format": "填空题不需要写输入，把最终结果（一个数字或一串字符）填进答题区即可。",
+  "output_format": "只要最终结果，过程不记分。",
+  "examples": [],
+  "limits": {
+    "time_ms": 2000
+  },
+  "answer": "80",
+  "answer_hint": "只点亮一个段也算连通；判连通时只能在两端都亮着的段之间连线，没亮的段不能当桥。",
+  "tests": [],
+  "solution": {
+    "idea": "<p>先把公共端点关系写成边：<code>a-b, a-f, b-g, b-c, f-g, f-e, c-g, c-d, g-e, e-d</code>。</p><p>非空子集一共 127 个，逐个枚举：只看两端都亮着的边，用并查集合并，最后检查是不是只剩一个集合；再从任意一段做广度优先搜索看能不能走遍整个子集。两种做法逐个一致才填。</p>",
+    "code": "\"\"\"p23 填空：七段数码管（a~g 七个段），点亮若干个段组成一个\"字符\"。\n要求亮着的段必须首尾相连（有公共端点就算相连）。问一共能点亮多少种连通的字符。\n枚举 127 个非空子集，每个子集只在\"两端都亮着\"的边上做连通检查：\n做法 A 并查集，做法 B 从任一段出发做广度优先搜索，两边必须一致。\n\"\"\"\nfrom collections import deque\nfrom itertools import combinations\n\nADJ = {\n    'a': ['b', 'f'],\n    'b': ['a', 'g', 'c'],\n    'c': ['b', 'g', 'd'],\n    'd': ['c', 'e'],\n    'e': ['d', 'f', 'g'],\n    'f': ['a', 'e', 'g'],\n    'g': ['b', 'c', 'e', 'f'],\n}\nSEGS = ['a', 'b', 'c', 'd', 'e', 'f', 'g']\n\n\ndef connected_dsu(subset):\n    if len(subset) <= 1:\n        return True\n    fa = {x: x for x in subset}\n\n    def find(x):\n        while fa[x] != x:\n            fa[x] = fa[fa[x]]\n            x = fa[x]\n        return x\n\n    for u in subset:\n        for v in ADJ[u]:\n            if v in fa:\n                ru, rv = find(u), find(v)\n                if ru != rv:\n                    fa[rv] = ru\n    return len({find(x) for x in subset}) == 1\n\n\ndef connected_bfs(subset):\n    if len(subset) <= 1:\n        return True\n    seen = {subset[0]}\n    q = deque([subset[0]])\n    while q:\n        u = q.popleft()\n        for v in ADJ[u]:\n            if v in subset and v not in seen:\n                seen.add(v)\n                q.append(v)\n    return len(seen) == len(subset)\n\n\ntotal = 0\nfor k in range(1, 8):\n    for sub in combinations(SEGS, k):\n        a, b = connected_dsu(list(sub)), connected_bfs(list(sub))\n        assert a == b, sub\n        if a:\n            total += 1\nprint(total)\n",
+    "output": "$ python p23_segments.py\n80",
+    "reference": "code/ch10-graph/08_seven_segment_code.py",
+    "answer": "80"
+  }
+}

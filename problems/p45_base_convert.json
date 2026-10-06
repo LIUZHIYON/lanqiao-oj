@@ -1,0 +1,90 @@
+{
+  "id": "p45_base_convert",
+  "order": 45,
+  "title": "任意进制转换",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "进制",
+    "字符串"
+  ],
+  "chapter": "第 1 章 进制与 ASCII",
+  "source": "蓝桥杯省赛真题（题意整理）",
+  "statement": "<p>把一个十进制整数 n 转成 b 进制（b 在 2 到 16 之间）。</p><p>约定：数字 10 到 15 依次用大写字母 <code>A</code> 到 <code>F</code> 表示；负数在最前面输出一个负号，其余部分按绝对值转；0 就输出 <code>0</code>。</p><p>短除法：反复 <code>n % b</code> 拿到当前最低位，<code>n //= b</code> 去掉这一位，把拿到的字符一个个攒起来，最后反过来拼就是答案——先拿到的是低位。</p>",
+  "input_format": "一行两个整数 n 和 b（-10^15 ≤ n ≤ 10^15，2 ≤ b ≤ 16），空格分隔。",
+  "output_format": "一行，n 的 b 进制表示，数字 10 以上用大写字母 A 到 F，负数最前面带一个负号。",
+  "examples": [
+    {
+      "input": "2026 16",
+      "output": "7EA\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 2026 转 16 进制",
+      "input": "2026 16\n",
+      "expected": "7EA\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "0 转任何进制都是 0",
+      "input": "0 8\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "1 转 2 进制",
+      "input": "1 2\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "正好是基数幂",
+      "input": "4096 16\n",
+      "expected": "1000\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "负数 16 进制",
+      "input": "-255 16\n",
+      "expected": "-FF\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "负数 2 进制全是 1",
+      "input": "-1023 2\n",
+      "expected": "-1111111111\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机大数与随机基数",
+      "input": "553288326522799 5\n",
+      "expected": "1040010033443042212144\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "上界 10^15 转 2 进制",
+      "input": "1000000000000000 2\n",
+      "expected": "11100011010111111010100100110001101000000000000000\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>先记下 <code>neg = n &lt; 0</code>，再 <code>n = abs(n)</code>，全程只处理非负数，最后按需要在结果最前面挂个负号，省去一堆分支。<code>n == 0</code> 时循环一次都不进，要特判。</p><p>写完可以交叉验证：<code>bin</code>、<code>oct</code>、<code>hex</code> 的结果去掉前缀 <code>0b</code>、<code>0o</code>、<code>0x</code>，应该和自己转 2、8、16 进制一致。</p>",
+    "code": "\"\"\"p45 任意进制转换：十进制整数 n 转成 b 进制（2 到 16），负数带负号，10 以上用 A-F。\n练的语法点：短除法——每次 n % b 拿到最低位，n //= b 往上走，最后反过来拼。\n\"\"\"\nimport sys\n\nDIGITS = \"0123456789ABCDEF\"\n\n\ndef to_base(n, b):\n    if n == 0:\n        return \"0\"\n    neg = n < 0\n    n = abs(n)\n    parts = []\n    while n > 0:\n        parts.append(DIGITS[n % b])\n        n //= b\n    if neg:\n        parts.append(\"-\")\n    return \"\".join(reversed(parts))\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    n, b = int(data[0]), int(data[1])\n    print(to_base(n, b))\n\n\nmain()\n",
+    "output": "$ python p45_base_convert.py\n输入：2026 16\n\n输出：7EA\r\n",
+    "reference": "code/ch01-basics/26_ex_base_convert.py"
+  }
+}

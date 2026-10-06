@@ -1,0 +1,91 @@
+{
+  "id": "p48_reduced_fraction_count",
+  "order": 48,
+  "title": "既约分数计数",
+  "type": "prog",
+  "difficulty": "提高",
+  "score": 25,
+  "tags": [
+    "数论",
+    "欧拉函数",
+    "容斥"
+  ],
+  "chapter": "第 9 章 19 / 第 5 章 14",
+  "source": "蓝桥杯省赛真题（题意整理）",
+  "statement": "<p>分子、分母都从 <code>1</code> 到 <code>n</code> 里取，一个分子配一个分母算一个<strong>有序对</strong>：<code>(2,3)</code> 和 <code>(3,2)</code> 是两个不同的对。</p><p>问这些对里有多少个互质，也就是最大公约数等于 1 —— 这样的分数已经不能再约分，叫既约分数。</p><p>n = 3 时一共 9 个对，只有 <code>(2,2)</code> 和 <code>(3,3)</code> 不互质，答案是 7。</p><p>填空版真题问的是 <code>n = 2022</code>（答案 2486423），这里改成编程题：读入哪个 n 就算哪个 n。</p><p>别指望双重循环逐对求最大公约数：n = 2000 时是四百万次 gcd，本机实测两秒多，正好压过超时线；按层数一次数完才是稳的。</p>",
+  "input_format": "一行一个整数 n（1 ≤ n ≤ 2022）。",
+  "output_format": "一行一个整数，是互质有序对的个数。",
+  "examples": [
+    {
+      "input": "9",
+      "output": "55\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 n=9",
+      "input": "9\n",
+      "expected": "55\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 n=1 只剩 (1,1)",
+      "input": "1\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "n=2 只有一对可约",
+      "input": "2\n",
+      "expected": "3\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "n=3 两对可约",
+      "input": "3\n",
+      "expected": "7\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机小 n=60 以内",
+      "input": "49\n",
+      "expected": "1507\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "n=1379",
+      "input": "1379\n",
+      "expected": "1157127\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "n=2000 大规模",
+      "input": "2000\n",
+      "expected": "2433175\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "n=2022 填空题那一档",
+      "input": "2022\n",
+      "expected": "2486423\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>按 <code>max(a, b) = k</code> 分层：另一个坐标取 1 到 k，和 k 互质的恰好有 <code>phi(k)</code> 个，而 <code>(k, j)</code> 与 <code>(j, k)</code> 是两个方向，所以第 k 层贡献 <code>2 * phi(k)</code>；只有 <code>(1,1)</code> 被数了两遍，最后减 1。</p><p>答案 = <code>2 * (phi(1) + ... + phi(n)) - 1</code>，用欧拉函数筛一次算完，复杂度接近 O(n)。</p><p>另一条独立的路是莫比乌斯容斥：互质的对数 = <code>Σ mu(d) * (n // d) * (n // d)</code>。两个筛法必须给同一个数，n 不超过 200 时再拿 gcd 双循环验一遍。</p>",
+    "code": "\"\"\"p48 既约分数计数：分子、分母都从 1..n 里取，问有多少个有序对 (a, b) 互质。\n方法一：欧拉函数筛。按 max(a, b) = k 分层，k 这一层新添 2*phi(k) 对，\n        所以答案 = 2 * (phi(1) + ... + phi(n)) - 1（(1,1) 多算了一次）。\n方法二：莫比乌斯容斥。答案 = Σ mu(d) * (n // d) ** 2。\n两种筛法互相核对；n 很小时再用 gcd 双循环暴力验一遍。\n\"\"\"\nimport sys\nfrom math import gcd\n\n\ndef phi_sieve(n):\n    \"\"\"埃氏筛风格的欧拉函数：遇到素数 i 就把 i 的倍数的 phi 缩一次。\"\"\"\n    phi = list(range(n + 1))\n    for i in range(2, n + 1):\n        if phi[i] == i:                       # phi[i] 没被动过 -> i 是素数\n            for j in range(i, n + 1, i):\n                phi[j] -= phi[j] // i\n    return phi\n\n\ndef mobius_sieve(n):\n    \"\"\"线性筛顺带得到莫比乌斯函数：质因子有重复记 0，否则 (-1) 的个数次方。\"\"\"\n    mu = [0] * (n + 1)\n    mu[1] = 1\n    primes = []\n    comp = bytearray(n + 1)\n    for i in range(2, n + 1):\n        if not comp[i]:\n            primes.append(i)\n            mu[i] = -1\n        for p in primes:\n            if i * p > n:\n                break\n            comp[i * p] = 1\n            if i % p == 0:                    # p 重复出现，mu 直接是 0\n                mu[i * p] = 0\n                break\n            mu[i * p] = -mu[i]\n    return mu\n\n\ndef count_by_phi(n):\n    return 2 * sum(phi_sieve(n)[1:]) - 1\n\n\ndef count_by_mu(n):\n    mu = mobius_sieve(n)\n    return sum(mu[d] * (n // d) * (n // d) for d in range(1, n + 1))\n\n\ndef count_by_gcd(n):\n    cnt = 0\n    for a in range(1, n + 1):\n        for b in range(1, n + 1):\n            if gcd(a, b) == 1:\n                cnt += 1\n    return cnt\n\n\ndef solve(n):\n    by_phi = count_by_phi(n)\n    by_mu = count_by_mu(n)\n    assert by_phi == by_mu, \"欧拉函数与莫比乌斯两种数法不一致\"\n    if n <= 200:                              # 小规模用暴力双循环再核一次\n        assert count_by_gcd(n) == by_phi, \"暴力 gcd 与筛法不一致\"\n    return by_phi\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    if not data:\n        return\n    print(solve(int(data[0])))\n\n\nmain()\n",
+    "output": "$ python p48_reduced_fraction_count.py\n输入：9\n\n输出：55\r\n",
+    "reference": "code/ch09-number-theory/19_real_reduced_fraction.py"
+  }
+}

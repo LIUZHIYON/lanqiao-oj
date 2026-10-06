@@ -1,0 +1,31 @@
+{
+  "id": "p21_fact_zeros",
+  "order": 21,
+  "title": "2022 阶乘末尾的 0",
+  "type": "fill",
+  "difficulty": "入门",
+  "score": 10,
+  "tags": [
+    "阶乘",
+    "质因子"
+  ],
+  "chapter": "第 13 章 11 / 第 9 章 16",
+  "source": "蓝桥杯省赛真题（题意整理）",
+  "statement": "<p>还是 <code>2022!</code> 这个乘积，写成十进制以后，<strong>末尾连着有多少个 0</strong>？</p><p>每个 0 都来自一对 <code>2 × 5</code>。乘积里因子 2 比因子 5 多得多，所以只要数因子 5 出现了多少次。</p><p>真乘出来数尾巴也能得到答案，但公式只花几微秒，而且能说明道理。</p>",
+  "input_format": "填空题不需要写输入，把最终结果（一个数字或一串字符）填进答题区即可。",
+  "output_format": "只要最终结果，过程不记分。",
+  "examples": [],
+  "limits": {
+    "time_ms": 2000
+  },
+  "answer": "503",
+  "answer_hint": "只数质因子 5 就够（2 多得用不完）；25、125、625 这些含有多个 5 的要重复数。",
+  "tests": [],
+  "solution": {
+    "idea": "<p><code>2022//5 + 2022//25 + 2022//125 + 2022//625</code>，也就是 404 + 80 + 16 + 3。25 里的两个 5 被数了两次，这正是想要的效果；写成循环是 <code>while n: n //= 5; s += n</code>。</p><p>再用真乘出来的 2022! 数一遍结尾连续的 0 核对（记得先关掉位数限制）。</p>",
+    "code": "\"\"\"p21 填空：2022! 末尾有多少个 0。\n一个 0 来自一对 2 和 5，而 2 比 5 多得多，所以只要数 2022! 里质因子 5 的个数：\n2022//5 + 2022//25 + 2022//125 + 2022//625。再把 2022! 真算出来数尾巴验证。\n\"\"\"\nimport math\nimport sys\n\nsys.set_int_max_str_digits(0)\n\nN = 2022\n\n\ndef legendre(n, p):\n    s = 0\n    while n:\n        n //= p\n        s += n\n    return s\n\n\nby_formula = legendre(N, 5)\ntext = str(math.factorial(N))\nreal = len(text) - len(text.rstrip('0'))\nassert by_formula == real, (by_formula, real)\nprint(real)\n",
+    "output": "$ python p21_factorial_zeros.py\n503",
+    "reference": "code/ch13-real-problems/11_factorial.py",
+    "answer": "503"
+  }
+}

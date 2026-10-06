@@ -1,0 +1,91 @@
+{
+  "id": "p59_subset_sum_count",
+  "order": 59,
+  "title": "凑数方案数",
+  "type": "prog",
+  "difficulty": "提高",
+  "score": 25,
+  "tags": [
+    "动态规划",
+    "背包",
+    "计数"
+  ],
+  "chapter": "第 7 章 27 / 第 6 章 21",
+  "source": "蓝桥杯风格算法练习",
+  "statement": "<p>桌上有 <code>n</code> 个数，每个数要么拿走要么留下（最多用一次）。问有多少种取法，能让拿走的数加起来正好等于目标值 <code>s</code>。</p><p>取法只看拿了哪几个位置，不看顺序：哪怕两个数长得一样，选前面那个和选后面那个也是两种不同的取法。</p><p>一个都不拿也是一种取法，它的和是 0，所以 <code>s = 0</code> 时答案是 1。</p><p>怎么凑都凑不出来时输出 0。</p>",
+  "input_format": "第一行两个整数 n 和 s（1 ≤ n ≤ 100，0 ≤ s ≤ 5000）；第二行 n 个整数（1 到 5000），每个数最多只能用一次。",
+  "output_format": "一行一个整数，是总和刚好等于 s 的取法种数，答案可能很大。",
+  "examples": [
+    {
+      "input": "6 8\n1 2 3 4 5 6",
+      "output": "4\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 凑 8",
+      "input": "6 8\n1 2 3 4 5 6\n",
+      "expected": "4\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "s=0 只有空取法",
+      "input": "3 0\n1 2 3\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "谁都凑不出来",
+      "input": "3 100\n1 2 3\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "全相同 选一半",
+      "input": "8 4\n1 1 1 1 1 1 1 1\n",
+      "expected": "70\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "只能全部拿走",
+      "input": "4 10\n1 2 3 4\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机 n=13 全枚举核对",
+      "input": "13 150\n24 35 10 32 35 34 33 9 23 39 26 39 34\n",
+      "expected": "56\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机 n=60 s=1500",
+      "input": "60 1500\n23 67 62 111 2 22 37 48 82 5 150 3 16 148 7 65 138 175 116 133 87 126 141 58 185 37 177 125 20 1 117 151 87 36 28 72 196 180 24 7 115 191 113 31 98 45 106 200 19 19 52 49 180 76 176 102 171 4 141 158\n",
+      "expected": "23082993793439\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大 n=100 s=5000",
+      "input": "100 5000\n95 127 178 40 149 131 142 135 328 8 197 105 394 246 332 186 305 377 316 106 409 315 272 241 485 452 354 126 81 30 252 476 464 432 229 466 255 346 422 84 487 300 94 484 48 282 377 80 338 160 424 389 413 99 335 259 477 466 300 355 175 199 163 56 109 37 130 301 305 226 353 208 371 441 433 325 94 227 294 455 219 356 413 376 484 368 329 170 295 113 273 196 44 206 444 477 257 184 491 393\n",
+      "expected": "9016878490913487261\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>背包数方案：<code>dp[j]</code> = 和为 j 的取法数，<code>dp[0] = 1</code>。枚举每个数时内层的 j 要从大到小走（<code>for j in range(s, a - 1, -1)</code>），这样这个数只会被用一次；从小到大就走歪成「可以重复取」的完全背包了。</p><p>求最大值的 0-1 背包和数方案的 0-1 背包是同一个套路，只是把 max 换成加法。</p><p>核对：中等规模换一种写法——只维护「出现过的和」的字典，两边要一样；n 不超过 14 时直接枚举全部子集验一遍。方案数会比 64 位整数还大，Python 直接算就行。</p>",
+    "code": "\"\"\"p59 凑数方案数：n 个数，每个最多选一次，问选出若干个使总和刚好等于 s 的方案数。\n0-1 背包数方案：dp[j] = 和为 j 的方案数，dp[0] = 1（一个都不选）。\n枚举每个数时内层要从大到小走，否则同一个数会被反复用。\n方案数可能很大，Python 的整数不会溢出，直接原样输出。\n中等规模用\"只记出现过的和\"的字典做法核对，极小规模再全枚举一遍。\n\"\"\"\nimport sys\n\n\ndef count_by_dp(nums, s):\n    dp = [0] * (s + 1)\n    dp[0] = 1\n    for a in nums:\n        if a > s:                             # 单个数就超过目标，选它一定超\n            continue\n        for j in range(s, a - 1, -1):         # 逆序，保证每个数只用一次\n            dp[j] += dp[j - a]\n    return dp[s]\n\n\ndef count_by_dict(nums, s):\n    cnt = {0: 1}\n    for a in nums:\n        add = {}\n        for k, v in cnt.items():\n            nk = k + a\n            if nk <= s:\n                add[nk] = add.get(nk, 0) + v\n        for k, v in add.items():\n            cnt[k] = cnt.get(k, 0) + v\n    return cnt.get(s, 0)\n\n\ndef count_by_enum(nums, s):\n    n = len(nums)\n    hit = 0\n    for mask in range(1 << n):\n        tot = 0\n        for i in range(n):\n            if (mask >> i) & 1:\n                tot += nums[i]\n                if tot > s:\n                    break\n        if tot == s:\n            hit += 1\n    return hit\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    if not data:\n        return\n    n, s = int(data[0]), int(data[1])\n    nums = [int(x) for x in data[2:2 + n]]\n    assert len(nums) == n, \"数的个数和 n 对不上\"\n    ans = count_by_dp(nums, s)\n    if n * (s + 1) <= 300000:\n        assert ans == count_by_dict(nums, s), \"数组递推与字典做法不一致\"\n    if n <= 14:                               # 全枚举是 2^n，只能核很小的\n        assert ans == count_by_enum(nums, s), \"递推与全枚举不一致\"\n    print(ans)\n\n\nmain()\n",
+    "output": "$ python p59_subset_sum_count.py\n输入：6 8\n1 2 3 4 5 6\n\n输出：4\r\n",
+    "reference": "code/ch07-dp/27_practice_subset_sum.py"
+  }
+}

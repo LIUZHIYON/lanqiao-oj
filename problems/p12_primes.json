@@ -1,0 +1,83 @@
+{
+  "id": "p12_primes",
+  "order": 12,
+  "title": "素数",
+  "type": "prog",
+  "difficulty": "提高",
+  "score": 25,
+  "tags": [
+    "筛法",
+    "数论"
+  ],
+  "chapter": "第 9 章 03、05（素数与筛法）",
+  "source": "蓝桥杯常考题型（题意整理）",
+  "statement": "<p>把素数从小到大排：<code>2, 3, 5, 7, 11, ...</code>。给定 n，输出两个数：</p><ul><li>第 n 个素数是多少；</li><li>n 以内（包括 n 自己）一共有多少个素数。</li></ul><p>比如 n = 10：第 10 个素数是 29，10 以内的素数是 2、3、5、7 共 4 个，输出 <code>29 4</code>。</p><p>两个问题都依赖素数表，所以先把筛法跑一遍：埃氏筛就是拿每个素数去划掉它的倍数，剩下的全是素数，一次筛几百万都没问题。</p>",
+  "input_format": "一行一个正整数 n（1 ≤ n ≤ 100000）。",
+  "output_format": "一行两个整数，用空格隔开：第 n 个素数、n 以内（含 n）的素数个数。",
+  "examples": [
+    {
+      "input": "10",
+      "output": "29 4\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 n=10",
+      "input": "10\n",
+      "expected": "29 4\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 n=1",
+      "input": "1\n",
+      "expected": "2 0\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "n=2",
+      "input": "2\n",
+      "expected": "3 1\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "n 自己是素数",
+      "input": "5\n",
+      "expected": "11 3\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "小质数 13",
+      "input": "13\n",
+      "expected": "41 6\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "随机中等",
+      "input": "20679\n",
+      "expected": "233083 2328\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "最大 n=100000",
+      "input": "100000\n",
+      "expected": "1299709 9592\r\n",
+      "score": 5,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>先估一个够大的上界（第 6 个之后 <code>p_k &lt; k(ln k + ln ln k)</code>）筛一次，表里不够 n 个就把上界翻倍重来，这样第 n 个素数一定在表里。</p><p>n 以内有多少个素数，直接在表上数 <code>p &lt;= n</code>，不用另开一次筛。n = 1 时答案是 <code>2 0</code> —— 1 以内一个素数都没有，这个 0 很容易漏。</p>",
+    "code": "\"\"\"p12 素数：输出第 n 个素数，以及 n 以内的素数个数（两个数一行）。\n用埃氏筛：从 2 开始，把每个素数的倍数划掉。筛一次就能同时回答两个问题。\n\"\"\"\nimport sys\nfrom math import isqrt, log\n\n\ndef sieve(limit):\n    \"\"\"返回 2..limit 的全部素数（ bytearray 标记合数）。\"\"\"\n    if limit < 2:\n        return []\n    is_comp = bytearray(limit + 1)\n    for i in range(2, isqrt(limit) + 1):\n        if not is_comp[i]:\n            # 注意要写入 1（合数），写 bytearray(n) 全是 0，等于什么都没划掉\n            is_comp[i * i:limit + 1:i] = b\"\\x01\" * len(range(i * i, limit + 1, i))\n    return [x for x in range(2, limit + 1) if not is_comp[x]]\n\n\ndef solve(n):\n    # 先估一个够用的上界（第 6 个素数以后 p_k < k(ln k + ln ln k)），不够就翻倍再筛\n    limit = 20 if n < 6 else int(n * (log(n) + log(log(n)))) + 10\n    while True:\n        ps = sieve(limit)\n        if len(ps) >= n:\n            break\n        limit *= 2\n    cnt_le_n = sum(1 for p in ps if p <= n)\n    return ps[n - 1], cnt_le_n\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    nth, cnt = solve(int(data[0]))\n    print(nth, cnt)\n\n\nmain()\n",
+    "output": "$ python p12_primes.py\n输入：10\n\n输出：29 4\r\n",
+    "reference": "code/ch09-number-theory/05_sieve.py"
+  }
+}

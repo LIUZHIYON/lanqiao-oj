@@ -1,0 +1,91 @@
+{
+  "id": "p61_lcs_length",
+  "order": 61,
+  "title": "最长公共子序列",
+  "type": "prog",
+  "difficulty": "提高",
+  "score": 25,
+  "tags": [
+    "动态规划",
+    "字符串",
+    "二维"
+  ],
+  "chapter": "第 7 章 21、28",
+  "source": "蓝桥杯风格算法练习",
+  "statement": "<p>子序列是把串中若干个字符按原来的先后顺序挑出来得到的串，允许不连续：<code>ace</code> 是 <code>abcde</code> 的子序列，<code>ca</code> 不是。</p><p>给两个串，问它们公共的子序列最长有多长。</p><p>比如 <code>abcbdab</code> 和 <code>bdcaba</code>，公共子序列有 <code>bcba</code>、<code>bdab</code>，最长是 4。</p><p>两个串一个公共字符都没有时答案是 0。</p>",
+  "input_format": "第一行两个整数 n 和 m（1 ≤ n, m ≤ 1200），是两个串的长度；第二行串 A（长度 n），第三行串 B（长度 m），都只由小写字母组成。",
+  "output_format": "一行一个整数，是 A 和 B 的公共子序列的最大长度。",
+  "examples": [
+    {
+      "input": "7 6\nabcbdab\nbdcaba",
+      "output": "4\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 abcbdab 与 bdcaba",
+      "input": "7 6\nabcbdab\nbdcaba\n",
+      "expected": "4\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 1x1 相同",
+      "input": "1 1\na\na\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最小 1x1 不同",
+      "input": "1 1\na\nb\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "两个串一模一样",
+      "input": "6 6\nabcdef\nabcdef\n",
+      "expected": "6\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "字母完全不重叠 答案 0",
+      "input": "5 5\naaaaa\nbbbbb\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "一个是另一个的子序列",
+      "input": "5 9\nabcde\nazbzzczdz\n",
+      "expected": "4\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机 300 x 300",
+      "input": "300 300\naccacdbaebcedceddecedcddcbcccbdcdcbaddecdcedcaebdcdbbabbbbceeabeeecacedabdebadbeacacceccaddceacaecadcadcbadeddddcaaceebaedaebaeeedacccaeeaecebebccaddebecedcdebacbadacbadbbdcccdceecaadcacbbeccaddedcaacedbbebabccaedcdaebdbbacbdceeddbadaeaaeecdaedbadcecccbcdacedcadbddabaabaacadbaeadddccdededeadbccdeead\nbbbbccacbacccbadebacbcabaaaabedaecbdcdcdaeeacaadbaeaddbbddbadbccbcbcbdccdcbcaceceeaaaaddcacbbabaeebecbedabddcbabecdeecddcebedaeabeebeaebaceedadbdccddbeaecacebcaabdcaeabababbbadeecdaaaedcbcdcbcbdbddbccdacdeeaaeacdbdbaacaddceaadaebbccccdcdeadacdecbddbbbbaacdcdecddcdbdbabdcedcaadcbadadbcbaebebebbcaaabe\n",
+      "expected": "174\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大 1200 x 1200",
+      "input": "1200 1200\nagbcadfgahegcgedbcgbcheebafhghhagddabhghdgfhecgaaeceddbcadbbacbbbdehdfhbhgfdfceebfcaggbehdchbdcbfccbffhcbecdfbhbgdfbbbffegcagfcaeegbgbgfeaddcdaaegfedcdghaedbfdfchgbcedfbabghgcgadfaedfhddbhhachccgaabhahedgfdgfbfgchcbbdbdfegeddahdhehgadeebhgghabfddghadaaaddebgedbeachdbcbehddgbcaagheeahaabebcddbcgfdhhebbhabaebcbfefehggbgfhaebccgefdffafhfhcgdffghcaefbebadfahhdcceecebacaffebahdhcaahebabhgahdhahecdbecabafhhbeabfcbddaaadacddgegdhggfaagacfehbdbdbabfgeebcbagfdbaafhbeefbchaaaefhdbaffgfaebdggfcdefgedbbcbfddffcccbacddhbehhbgdcgbbdbdafcffbaccfehcghegbbdeafcdcbcfdhghfhhaaeebafhdfbgccfaffefabdgghfdhhgbbdcbgaacefceaabechagchfccadhhgggeabcgdfggeefecebfadchdbhchabaefbdhfdhcfhddgfchdehdebeeagbhgbchhcbfhbgchdafefeecaagahfacfedhfecgeaebhbcdcefcdggcbbgdaeffbegaecbdbgcbaccadbabgfbhgaadcfehgadfecaacfefaegegegfbcdecdafdhhabhdfhhfbcbcbbcedeghdahcbegdeebaecbdbdgbgbfaedbbadddccafhgacchbffabchggfbaebhfeffdehbdchchacbghabbefdchfgdbbebchgfhaegafhbeeedeaebchgfgchhaheabaeeeddhddfcgaeaecafhdbggggfbgdccdecggecdeghdccefhcfdbhfhhffchcabhecgceecgbffgfggceehbccbbehfdacffhdcgghbggddhfabhhfacgggcfafgecgcfchccddhdhggabeaghfdghggafhcfdhggaghbhchghhadhfgedcbgfaaehfagdedcadfcdghbedbcheeagdccabbffbachfadcadbfchfebfhegdffdhfdgh\nbigicaddbffgdeedgfbeebeaaaeibfdeibbgddfafebgiggiecfdbibbfabffcgbfafdegicceadccdbadiiabfbbgcgaebicbcddaccadgcagdieibeffiebccdgieacbdeaccaedafiadbbfggaiigieifdigbbgbfdcbbdfcaaifgggfbdbeaigiibeicbbdbfeggddfbdfedagcciddicbbcggbdgbfeadecdfieeeicaeaabbabdfidfbbccidaecaagfbaeegaibbbdcfacaefcfbgigfabiefibgbdagebiaggbffcgieieafegeddgdffeedcfgebbecafddaaiggafefeicfdigababaccggbbfcebfiiebegabggabdagbggdeciigigecacidgdifccbcedcaicicciecgfbabefciiaecfefdbececcdaieegcfcifbagdegdiggfbieaeiabiiffedbaagedeideifbfbdcdbecffeidcfbefcfgfibagcfcbfaafcibiaiffggcfigdbabacaeiccecifcgbfaiccifgifeibibgebedcddccbgediiiceigbbcibfeidffcgfffcbbbfgedbfceefgiibaagiggeaidgdebgicegabibdbaefcgiaiabeiefaedfggdbfdgibifgcgeaiiaaiaaacdedbageeaecbabfaefbacieefcicgbdbababcgbbadababcdcacfaciififcifcfdigbccaibbfcabbabgadbfiaccfebedebiefadbfbccifaefbgdcdgiaffidiciicefegggefagdgfdgbbgbbibgdcdeeiidgccbgaeddeiffadebiagbbiccaaabefgieafedbcfdibgggefcbibfcbfegcdeidgebigdedgbdgfcidecaibcdedbfiaecegdabcbigibcabbieaffdfdgeibaaidgcfbidffcgcafdiiigbafdbdeabefibdefaaebfcdcedcdiecebbiieedfbgafedaibcigafaeadffcfcfgbafcdbafdffiigbbcbebefabegaccfegbbcfigcieacaeeeafbgfcfcdbfabedcfecgeddfiadececbdaiegicggibdfiifabigbfafdeidaieeaiabeigffbidbbda\n",
+      "expected": "553\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>二维 DP：<code>dp[i][j]</code> = A 的前 i 个字符与 B 的前 j 个字符的 LCS 长度。末尾字符相同，它一定能接在两边的 LCS 后面：<code>dp[i][j] = dp[i-1][j-1] + 1</code>；不同时，丢掉 A 的最后一个或丢掉 B 的最后一个，取较大的：<code>max(dp[i-1][j], dp[i][j-1])</code>。</p><p>每行只依赖上一行，滚动两行就够，省内存也更快。n × m 的一百四十万次循环是这题的耗时大头，别在里面做多余的事。</p><p>核对：交换 A、B 结果必须不变；串很短时枚举它的全部子序列，逐个判断是不是另一个串的子序列，小规模时和 DP 比一遍。</p>",
+    "code": "\"\"\"p61 最长公共子序列：给两个串，输出它们公共子序列的最长长度。\n子序列不要求连续（\"abc\" 里 \"ac\" 是子序列，但 \"ca\" 不是），所以是二维 DP：\ndp[i][j] = 前 i 个 和 前 j 个 的 LCS 长度。\n末字符相同 -> 左上角 + 1；不同 -> 上面和左边取大的。只依赖上一行，滚动两行就够。\n串很短时用枚举全部子序列暴力核对，中等规模时再确认 lcs(a,b) 和 lcs(b,a) 相等。\n\"\"\"\nimport sys\n\n\ndef lcs_len(a, b):\n    m = len(b)\n    prev = [0] * (m + 1)\n    for ca in a:\n        cur = [0] * (m + 1)\n        for j in range(1, m + 1):\n            if b[j - 1] == ca:\n                cur[j] = prev[j - 1] + 1\n            else:\n                up = prev[j]\n                left = cur[j - 1]\n                cur[j] = up if up >= left else left\n        prev = cur\n    return prev[m]\n\n\ndef is_subseq(short, long):\n    it = iter(long)\n    return all(ch in it for ch in short)\n\n\ndef by_brute(a, b):\n    \"\"\"枚举 a 的所有子序列，能塞进 b 的最长的那个就是答案。\"\"\"\n    n = len(a)\n    best = 0\n    for mask in range(1 << n):\n        sub = \"\".join(a[i] for i in range(n) if (mask >> i) & 1)\n        if len(sub) <= best or len(sub) > len(b):\n            continue\n        if is_subseq(sub, b):\n            best = len(sub)\n    return best\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    n, m = int(data[0]), int(data[1])\n    a, b = data[2], data[3]\n    assert len(a) == n and len(b) == m, \"串长和给定的 n、m 对不上\"\n    ans = lcs_len(a, b)\n    if n * m <= 400000:                       # 再跑一遍代价不小，只在中等规模核对\n        assert ans == lcs_len(b, a), \"交换两个串结果应当不变\"\n    if min(n, m) <= 10:                       # 全枚举是 2 的幂次，只能核很短的\n        short, long = (a, b) if n <= m else (b, a)\n        assert ans == by_brute(short, long), \"DP 与枚举子序列不一致\"\n    print(ans)\n\n\nmain()\n",
+    "output": "$ python p61_lcs_length.py\n输入：7 6\nabcbdab\nbdcaba\n\n输出：4\r\n",
+    "reference": "code/ch07-dp/21_lcs.py"
+  }
+}

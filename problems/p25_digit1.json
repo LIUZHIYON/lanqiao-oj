@@ -1,0 +1,31 @@
+{
+  "id": "p25_digit1",
+  "order": 25,
+  "title": "写了多少个数字 1",
+  "type": "fill",
+  "difficulty": "入门",
+  "score": 10,
+  "tags": [
+    "数位统计",
+    "枚举"
+  ],
+  "chapter": "第 13 章 15 / 首页必做清单第 20 题",
+  "source": "蓝桥杯常考填空题（题意整理）",
+  "statement": "<p>还是把 1 到 2026 依次写出来，数一数一共用掉了多少个数字 <code>1</code>。</p><p>写 1 用掉 1 个，写 11 用掉 2 个，写 111 用掉 3 个，写 2026 一个都不用。</p>",
+  "input_format": "填空题不需要写输入，把最终结果（一个数字或一串字符）填进答题区即可。",
+  "output_format": "只要最终结果，过程不记分。",
+  "examples": [],
+  "limits": {
+    "time_ms": 2000
+  },
+  "answer": "1613",
+  "answer_hint": "111 要数 3 次；这题问出现次数，不是问有多少个数含 1，别和上一题搞混。",
+  "tests": [],
+  "solution": {
+    "idea": "<p>暴力法一行搞定：<code>sum(str(x).count('1') for x in range(1, 2027))</code>，一毫秒出结果。</p><p>数位公式法：一位一位看，把数拆成高位、当前位、低位三段讨论（当前位大于 1、等于 1、小于 1 三种情况）再乘上每轮的跨度。两种办法一致才填。</p>",
+    "code": "\"\"\"p25 填空：把 1~2026 依次写出来，一共用掉了多少个数字 1（22 里有 0 个，111 里有 3 个）。\n做法 A：逐个数字符串里数 1 的个数。\n做法 B：按数位统计公式，一位一位算 1 出现多少次。\n\"\"\"\n\nLIMIT = 2026\n\n\ndef count_digit_bruteforce(n, d=1):\n    return sum(str(x).count(str(d)) for x in range(1, n + 1))\n\n\ndef count_digit_by_position(n, d=1):\n    \"\"\"统计 1..n 中数字 d（d 不为 0）出现的总次数。\"\"\"\n    total, factor = 0, 1\n    while n // factor:\n        high = n // (factor * 10)\n        cur = (n // factor) % 10\n        low = n % factor\n        if cur > d:\n            total += (high + 1) * factor\n        elif cur == d:\n            total += high * factor + low + 1\n        else:\n            total += high * factor\n        factor *= 10\n    return total\n\n\na = count_digit_bruteforce(LIMIT, 1)\nb = count_digit_by_position(LIMIT, 1)\nassert a == b, (a, b)\nfor small in (9, 99, 500, 1325):\n    for d in (1, 3, 7, 9):\n        assert count_digit_by_position(small, d) == count_digit_bruteforce(small, d), (small, d)\nprint(a)\n",
+    "output": "$ python p25_digit1_count.py\n1613",
+    "reference": "code/ch13-real-problems/15_digit_stats.py",
+    "answer": "1613"
+  }
+}

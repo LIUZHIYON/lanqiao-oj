@@ -1,0 +1,90 @@
+{
+  "id": "p33_leap_weekday",
+  "order": 33,
+  "title": "闰年与星期",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "闰年判断",
+    "日期处理"
+  ],
+  "chapter": "第 1 章 运算符 / 第 3 章 列表与元组",
+  "source": "蓝桥杯风格语法练习",
+  "statement": "<p>给一个日期，输出两件事：这一年是闰年还是平年，以及这一天是星期几。</p><p>闰年规则：能被 4 整除且不能被 100 整除，或者能被 400 整除。所以 1900 年是平年，2000 年是闰年。</p><p>星期几要输出成汉字：<code>周一</code>、<code>周二</code>、……、<code>周六</code>、<code>周日</code>。</p>",
+  "input_format": "一行三个整数 y、m、d（1900 ≤ y ≤ 2100，1 ≤ m ≤ 12，d 是该月合法日期），表示 y 年 m 月 d 日，空格分隔。",
+  "output_format": "一行两个字段，空格分隔：第一个是 闰 或 平，第二个是 周一 到 周日。",
+  "examples": [
+    {
+      "input": "2026 10 1",
+      "output": "平 周四\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 2026-10-01",
+      "input": "2026 10 1\n",
+      "expected": "平 周四\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "年初边界 1900-01-01",
+      "input": "1900 1 1\n",
+      "expected": "平 周一\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "百年不闰 1900-03-01",
+      "input": "1900 3 1\n",
+      "expected": "平 周四\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "四百年才闰 2000-01-01",
+      "input": "2000 1 1\n",
+      "expected": "闰 周六\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "闰年 2 月 29 日",
+      "input": "2024 2 29\n",
+      "expected": "闰 周四\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "平年 2 月 28 日",
+      "input": "2023 2 28\n",
+      "expected": "平 周二\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "年末边界 2100-12-31",
+      "input": "2100 12 31\n",
+      "expected": "平 周五\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机日期",
+      "input": "2099 6 4\n",
+      "expected": "平 周四\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>闰年一行表达式就能搞定：<code>(y % 4 == 0 and y % 100 != 0) or y % 400 == 0</code>。</p><p>星期用标准库：<code>import datetime</code>，<code>datetime.date(y, m, d).weekday()</code> 返回 0 到 6，<strong>0 是周一，6 才是周日</strong>。拿一个七个元素的表按下标取名字，别把周日排到第一个位置。</p>",
+    "code": "\"\"\"p33 闰年与星期：读入 y m d，输出「闰/平」和该日是周几（周一~周日）。\n练的语法点：闰年判断表达式 + datetime 取星期（weekday() 里 0 是周一）。\n\"\"\"\nimport datetime\nimport sys\n\nWEEK = [\"周一\", \"周二\", \"周三\", \"周四\", \"周五\", \"周六\", \"周日\"]\n\n\ndef is_leap(y):\n    return (y % 4 == 0 and y % 100 != 0) or y % 400 == 0\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    y, m, d = int(data[0]), int(data[1]), int(data[2])\n    leap = \"闰\" if is_leap(y) else \"平\"\n    weekday = WEEK[datetime.date(y, m, d).weekday()]\n    print(leap, weekday)\n\n\nmain()\n",
+    "output": "$ python p33_leap_weekday.py\n输入：2026 10 1\n\n输出：平 周四\r\n",
+    "reference": "code/ch01-basics/25_ex_leap_year.py"
+  }
+}

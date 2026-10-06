@@ -1,0 +1,83 @@
+{
+  "id": "p28_arithmetic_bundle",
+  "order": 28,
+  "title": "四则运算套餐",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "运算符",
+    "输入输出"
+  ],
+  "chapter": "第 1 章 运算符 / 第 2 章 流程控制",
+  "source": "蓝桥杯风格语法练习",
+  "statement": "<p>读入两个正整数 <code>a</code> 和 <code>b</code>，把四则运算的结果一次算完。</p><p>Python 里整数相除要用 <code>//</code>（商向下取整），余数用 <code>%</code>。只写一个斜杠 <code>/</code> 得到的是小数，不能当商用。</p><p>输出五个结果，顺序固定：和、差、积、整除的商、余数。</p>",
+  "input_format": "一行两个正整数 a、b（1 ≤ a、b ≤ 10^9），中间用一个空格分隔。",
+  "output_format": "一行五个整数：和、差、积、整除的商、余数，用一个空格分隔。",
+  "examples": [
+    {
+      "input": "17 5",
+      "output": "22 12 85 3 2\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 17 和 5",
+      "input": "17 5\n",
+      "expected": "22 12 85 3 2\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 1 和 1",
+      "input": "1 1\n",
+      "expected": "2 0 1 1 0\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "a 小于 b，商是 0",
+      "input": "3 10\n",
+      "expected": "13 -7 30 0 3\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "正好整除，余数是 0",
+      "input": "8 8\n",
+      "expected": "16 0 64 1 0\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "差是负数",
+      "input": "12 45\n",
+      "expected": "57 -33 540 0 12\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "上界 10^9 相乘",
+      "input": "1000000000 1000000000\n",
+      "expected": "2000000000 0 1000000000000000000 1 0\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "随机大数",
+      "input": "674702760 366703783\n",
+      "expected": "1041406543 307998977 247416054492541080 1 307998977\r\n",
+      "score": 5,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>先 <code>a, b = map(int, input().split())</code> 把两个数读进来，再一行 <code>print(a + b, a - b, a * b, a // b, a % b)</code>。<code>print</code> 用逗号分隔多个值时，会自动在中间打一个空格。</p><p>差可能是负数（a 小于 b 的时候），乘积最大到 10 的 18 次方。Python 的整数不会溢出，放心直接乘。</p>",
+    "code": "\"\"\"p28 四则运算套餐：一行读入两个正整数 a、b，输出和 差 积 整除商 余数。\n练的语法点：+ - * // %，注意 // 是向下取整的整除，% 是取余。\n\"\"\"\nimport sys\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    a, b = int(data[0]), int(data[1])\n    print(a + b, a - b, a * b, a // b, a % b)\n\n\nmain()\n",
+    "output": "$ python p28_arithmetic_bundle.py\n输入：17 5\n\n输出：22 12 85 3 2\r\n",
+    "reference": "code/ch01-basics/04_floor_division.py"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "p16_cards",
+  "order": 16,
+  "title": "数字卡片",
+  "type": "fill",
+  "difficulty": "提高",
+  "score": 10,
+  "tags": [
+    "枚举",
+    "数位统计"
+  ],
+  "chapter": "第 13 章 02 / 第 5 章 枚举",
+  "source": "蓝桥杯省赛真题（题意整理）",
+  "statement": "<p>小蓝有 0 到 9 每种数字卡片各 <strong>2021 张</strong>。</p><p>他从 1 开始把正整数一个个写出来：1、2、3、4……每写一个数就要用掉对应数字的卡片（写 100 用掉一张 1 和两张 0）。某一种卡片用完就写不下去了。</p><p>问最多能<strong>完整地</strong>写到哪个数，把这个数填进来。</p><p>这种题手算必错，写个几行的循环边写边统计、一超限就停，程序比手指快得多。</p>",
+  "input_format": "填空题不需要写输入，把最终结果（一个数字或一串字符）填进答题区即可。",
+  "output_format": "只要最终结果，过程不记分。",
+  "examples": [],
+  "limits": {
+    "time_ms": 2000
+  },
+  "answer": "3181",
+  "answer_hint": "问的是能完整写到哪个数，不是哪种数字先用完；数字 0 要到 10 才被用到，别从 1 起算。",
+  "tests": [],
+  "solution": {
+    "idea": "<p>做法 A：一个一个数往上加，用长度 10 的列表统计每个数字用掉几张，一旦超过 2021 就输出上一个数。</p><p>做法 B：写出算 1~n 中数字 d 出现多少次的数位函数，再对 n 二分。</p><p>两种做法给出同一个数才敢填，顺便把写到该数时各数字的用量打印出来看一眼。</p>",
+    "code": "\"\"\"p16 填空：0~9 每种数字卡片各 2021 张，从 1 开始依次写正整数，最多能完整写到哪个数。\n两种做法互验：A 一个个数往上加；B 按位统计 1..n 中数字 d 出现次数 + 二分。\n\"\"\"\n\n\ndef simulate(limit):\n    cnt = [0] * 10\n    x = 1\n    while True:\n        for ch in str(x):\n            d = ord(ch) - 48\n            cnt[d] += 1\n            if cnt[d] > limit:\n                return x - 1\n        x += 1\n\n\ndef digit_count_1_to_n(n, d):\n    \"\"\"1..n 中数字 d 出现多少次（按位算，d 为 0 时最高位不算）。\"\"\"\n    total, factor = 0, 1\n    while n // factor > 0:\n        high = n // (factor * 10)\n        cur = (n // factor) % 10\n        low = n % factor\n        if d == 0:\n            if high == 0:\n                factor *= 10\n                continue\n            total += (high - 1) * factor + (low + 1 if cur == 0 else 0)\n        else:\n            if cur > d:\n                total += (high + 1) * factor\n            elif cur == d:\n                total += high * factor + low + 1\n            else:\n                total += high * factor\n        factor *= 10\n    return total\n\n\ndef by_binary_search(limit):\n    lo, hi = 1, 10 ** 7\n    while lo < hi:\n        mid = (lo + hi + 1) // 2\n        if any(digit_count_1_to_n(mid, d) > limit for d in range(10)):\n            hi = mid - 1\n        else:\n            lo = mid\n    return lo\n\n\na = simulate(2021)\nb = by_binary_search(2021)\nassert a == b, (a, b)\nassert all(digit_count_1_to_n(a, d) <= 2021 for d in range(10))\nassert any(digit_count_1_to_n(a + 1, d) > 2021 for d in range(10))\nprint(a)\n",
+    "output": "$ python p16_cards.py\n3181",
+    "reference": "code/ch13-real-problems/02_cards.py",
+    "answer": "3181"
+  }
+}

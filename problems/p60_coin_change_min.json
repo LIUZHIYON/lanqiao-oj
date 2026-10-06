@@ -1,0 +1,91 @@
+{
+  "id": "p60_coin_change_min",
+  "order": 60,
+  "title": "零钱兑换",
+  "type": "prog",
+  "difficulty": "提高",
+  "score": 25,
+  "tags": [
+    "动态规划",
+    "完全背包",
+    "BFS"
+  ],
+  "chapter": "第 7 章 12、26",
+  "source": "蓝桥杯风格算法练习",
+  "statement": "<p>有 <code>k</code> 种面额的硬币，每种数量无限，要凑出金额 <code>s</code>，问最少用几枚。</p><p>金额 0 不需要任何硬币，答案是 0。</p><p>先想清楚能不能贪心（每次拿最大面额）：<code>1 3 4</code> 凑 6，贪心拿 4 再拿 1、1，用 3 枚；而 3 + 3 只要 2 枚。面额之间没有整除关系时贪心是错的，得上动态规划。</p><p>凑不出来输出 -1，比如只有 2 和 4 却要凑 3。</p>",
+  "input_format": "第一行两个整数 k 和 s（1 ≤ k ≤ 50，0 ≤ s ≤ 20000）；第二行 k 个整数是硬币面额（1 到 20000，可能有重复，同一种面额想用几枚都行）。",
+  "output_format": "一行一个整数，是最少需要的硬币枚数；怎么都凑不出 s 时输出 -1。",
+  "examples": [
+    {
+      "input": "3 11\n1 2 5",
+      "output": "3\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 1 2 5 凑 11",
+      "input": "3 11\n1 2 5\n",
+      "expected": "3\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "金额 0 不用硬币",
+      "input": "3 0\n1 2 5\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "凑不出来输出 -1",
+      "input": "2 3\n2 4\n",
+      "expected": "-1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "面额都比金额大",
+      "input": "2 5\n7 9\n",
+      "expected": "-1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "贪心会出错的 1 3 4 凑 6",
+      "input": "3 6\n1 3 4\n",
+      "expected": "2\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "只有一种面额刚好整除",
+      "input": "1 49\n7\n",
+      "expected": "7\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机 k=12 s=1500 BFS 核对",
+      "input": "12 1500\n62 143 61 210 217 66 229 50 144 56 29 77\n",
+      "expected": "8\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大 k=50 s=20000",
+      "input": "50 20000\n65 121 522 543 644 667 739 772 923 1071 1084 1119 1169 1376 1393 1452 1532 1590 1676 1781 2084 2196 2261 2513 2552 2759 2814 2874 2914 3212 3232 3272 3474 3500 3788 3890 4078 4144 4203 4214 4647 4696 4732 4745 4814 4846 4872 4918 4943 4970\n",
+      "expected": "5\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p><code>dp[j]</code> = 凑出金额 j 的最少枚数，<code>dp[0] = 0</code>，其余先记成一个比 s 还大的「不可能」值。外层枚举面额，内层金额从小到大走，这样同一面额能被反复取用（完全背包）。</p><p>最后 <code>dp[s]</code> 还超过 s 就说明凑不出，输出 -1。</p><p>核对：金额不超过两千时改用广度优先——把 0 看作起点，每加一枚硬币算走一步，第一次走到 s 的层数就是最少枚数，两种做法必须给同一个数。</p>",
+    "code": "\"\"\"p60 零钱兑换：给 k 种面额（每种想用多少次都行），凑出金额 s 最少要几枚硬币，\n凑不出来输出 -1。\n完全背包：dp[j] = 凑出 j 的最少枚数，dp[0] = 0，其余先记成\"不可能\"。\n外层枚举面额、内层金额从小到大走，这样同一种面额可以重复取。\n金额小的时候用广度优先（每次往外加一枚硬币）核对，两条路都得给同一个答案。\n\"\"\"\nimport sys\nfrom collections import deque\n\n\ndef min_coins(coins, s):\n    inf = s + 1                               # 最多也就是 s 枚 1 元，比 s 大就代表不可能\n    dp = [inf] * (s + 1)\n    dp[0] = 0\n    for c in coins:\n        if c > s:\n            continue\n        for j in range(c, s + 1):             # 正序 = 同一种面额可以多次用\n            v = dp[j - c] + 1\n            if v < dp[j]:\n                dp[j] = v\n    return -1 if dp[s] > s else dp[s]\n\n\ndef by_bfs(coins, s):\n    if s == 0:\n        return 0\n    step = [-1] * (s + 1)\n    step[0] = 0\n    q = deque([0])\n    while q:\n        u = q.popleft()\n        for c in coins:\n            v = u + c\n            if v <= s and step[v] < 0:\n                step[v] = step[u] + 1\n                if v == s:\n                    return step[v]\n                q.append(v)\n    return -1\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    if not data:\n        return\n    k, s = int(data[0]), int(data[1])\n    coins = [int(x) for x in data[2:2 + k]]\n    assert len(coins) == k, \"面额个数和 k 对不上\"\n    coins = sorted(set(c for c in coins if c > 0))\n    ans = min_coins(coins, s)\n    if s <= 2000:                             # BFS 是 O(s*k)，小规模核对用\n        assert ans == by_bfs(coins, s), \"背包与 BFS 不一致\"\n    print(ans)\n\n\nmain()\n",
+    "output": "$ python p60_coin_change_min.py\n输入：3 11\n1 2 5\n\n输出：3\r\n",
+    "reference": "code/ch07-dp/12_coin_change.py"
+  }
+}

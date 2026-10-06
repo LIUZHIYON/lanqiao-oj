@@ -1,0 +1,90 @@
+{
+  "id": "p01_year_string",
+  "order": 1,
+  "title": "年号字串",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "进制",
+    "字符串"
+  ],
+  "chapter": "第 13 章 01 / 第 9 章 进制",
+  "source": "蓝桥杯省赛真题（题意整理）",
+  "statement": "<p>比赛用字母给年份编号，规则和表格的列名完全一样：<code>1=A，2=B，……，25=Y，26=Z，27=AA，28=AB</code>，一直往后排。</p><p>给你一个编号 <code>n</code>，输出它对应的字母串。</p><p>先想清楚它和普通进制差在哪：普通 26 进制每位是 0~25，而这里每位是 1~26（A 到 Z），<strong>根本没有 0 这一位</strong>。所以每次取余之前要先减 1。</p>",
+  "input_format": "一行一个正整数 n（1 ≤ n ≤ 100000）。",
+  "output_format": "一行，对应的字母串，全部大写，中间不空格。",
+  "examples": [
+    {
+      "input": "2026",
+      "output": "BYX\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 2026",
+      "input": "2026\n",
+      "expected": "BYX\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 n=1",
+      "input": "1\n",
+      "expected": "A\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "一位字母的尽头 26",
+      "input": "26\n",
+      "expected": "Z\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "刚出现两个字母 27",
+      "input": "27\n",
+      "expected": "AA\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "两位含 Z",
+      "input": "52\n",
+      "expected": "AZ\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "两位最大 702",
+      "input": "702\n",
+      "expected": "ZZ\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机中间值",
+      "input": "8485\n",
+      "expected": "LNI\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大 n=100000",
+      "input": "100000\n",
+      "expected": "EQXD\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>把 n 当成 Excel 列名处理：每次 <code>n -= 1</code> 把 1~26 压回 0~25，取余得到最右边那个字母，再 <code>n //= 26</code> 走到左边一位。</p><p>稳妥做法：再写一个反解函数（字母串换回数字），把 1、26、27、52、702 这几个关键点双向对一遍再交。</p>",
+    "code": "\"\"\"p01 年号字串：把编号换成 Excel 列名那样的字母串。\n读入一个正整数 n，输出对应字母串。\n关键点：每一位是 1~26（A~Z），没有 0 这一位，所以每次取余前先 n -= 1。\n\"\"\"\nimport sys\n\n\ndef to_column(n):\n    res = []\n    while n > 0:\n        n -= 1                      # 把 1..26 压成 0..25\n        res.append(chr(ord('A') + n % 26))\n        n //= 26\n    return ''.join(reversed(res))\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    print(to_column(int(data[0])))\n\n\nmain()\n",
+    "output": "$ python p01_year_string.py\n输入：2026\n\n输出：BYX\r\n",
+    "reference": "code/ch13-real-problems/01_year_string.py"
+  }
+}

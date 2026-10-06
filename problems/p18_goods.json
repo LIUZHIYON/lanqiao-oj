@@ -1,0 +1,31 @@
+{
+  "id": "p18_goods",
+  "order": 18,
+  "title": "货物摆放",
+  "type": "fill",
+  "difficulty": "较难",
+  "score": 10,
+  "tags": [
+    "质因数分解",
+    "计数"
+  ],
+  "chapter": "第 13 章 06 / 首页必做清单第 43 题",
+  "source": "蓝桥杯省赛真题（题意整理）",
+  "statement": "<p>仓库里有 <code>2022082731456292</code> 件货物，要正好码成一个长方体，三条边的长度分别是 a、b、c 件，也就是 <code>a * b * c = 2022082731456292</code>。</p><p>问满足等式的<strong>有序</strong>三元组 (a, b, c) 有多少种。a、b、c 都是正整数，顺序不同算不同方案。</p><p>这个数有 16 位，三重循环枚举到毕业也跑不完。正确思路是先分解质因数。</p>",
+  "input_format": "填空题不需要写输入，把最终结果（一个数字或一串字符）填进答题区即可。",
+  "output_format": "只要最终结果，过程不记分。",
+  "examples": [],
+  "limits": {
+    "time_ms": 2000
+  },
+  "answer": "54",
+  "answer_hint": "这里数的是有序三元组，(2,3,5) 和 (3,2,5) 算两种；如果题目改成 a≤b≤c 结果会小很多。",
+  "tests": [],
+  "solution": {
+    "idea": "<p>分解得到 <code>2022082731456292 = 2^2 * 47917 * 10549923469</code>，指数分布是 2、1、1。把某个质因子的 e 次幂分给 a、b、c 三个数（可以分到 0 个）是可重复组合，方案数 <code>C(e+2, 2)</code>；不同质因子之间相互独立，全部乘起来：<code>C(4,2)*C(3,2)*C(3,2) = 6*3*3</code>。</p><p>再用另一种算法核对：枚举 L 的每个约数 a，统计 b*c = L/a 的有序对数（就是 L/a 的约数个数）并求和。约数要用质因数组合出来，不要从 1 试到 L。</p>",
+    "code": "\"\"\"p18 填空：L = 2022082731456292，统计满足 a*b*c = L 的有序三元组 (a,b,c) 有多少个。\n方法 A：分解质因数后用隔板法，每个质因子的指数 ei 分给三个数 -> C(ei+2, 2)，整体相乘。\n方法 B：枚举 L 的约数 a，对每个 a 数 b*c = L/a 的有序对数（即 L/a 的约数个数）再求和。\n\"\"\"\nfrom math import comb\n\n\ndef factorize(n):\n    f = {}\n    d = 2\n    while d * d <= n:\n        while n % d == 0:\n            f[d] = f.get(d, 0) + 1\n            n //= d\n        d += 1 if d == 2 else 2\n    if n > 1:\n        f[n] = f.get(n, 0) + 1\n    return f\n\n\ndef divisors_from_factors(n):\n    ds = [1]\n    for p, e in factorize(n).items():\n        cur = []\n        mul = 1\n        for _ in range(e + 1):\n            for d in ds:\n                cur.append(d * mul)\n            mul *= p\n        ds = cur\n    return sorted(ds)\n\n\ndef by_formula(n):\n    ans = 1\n    for e in factorize(n).values():\n        ans *= comb(e + 2, 2)\n    return ans\n\n\ndef by_divisor_sum(n):\n    ds = divisors_from_factors(n)\n    total = 0\n    for a in ds:\n        total += len(divisors_from_factors(n // a))\n    return total\n\n\ndef brute(n):\n    \"\"\"只用于很小的数：直接三重枚举验证公式没写错。\"\"\"\n    cnt = 0\n    for a in range(1, n + 1):\n        if n % a:\n            continue\n        for b in range(1, n // a + 1):\n            if (n // a) % b == 0:\n                cnt += 1\n    return cnt\n\n\nfor small in (1, 2, 6, 12, 24, 30, 36, 120):\n    assert by_formula(small) == by_divisor_sum(small) == brute(small), small\nL = 2022082731456292\na = by_formula(L)\nb = by_divisor_sum(L)\nassert a == b, (a, b)\nprint(a)\n",
+    "output": "$ python p18_goods.py\n54",
+    "reference": "code/ch13-real-problems/06_goods.py",
+    "answer": "54"
+  }
+}

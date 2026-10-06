@@ -1,0 +1,90 @@
+{
+  "id": "p13_combination",
+  "order": 13,
+  "title": "组合计数",
+  "type": "prog",
+  "difficulty": "提高",
+  "score": 25,
+  "tags": [
+    "组合数",
+    "大整数"
+  ],
+  "chapter": "第 12 章 01、02（排列组合）",
+  "source": "蓝桥杯常考题型（题意整理）",
+  "statement": "<p>从 <code>n</code> 个不同的东西里挑 <code>k</code> 个，不管顺序，一共有多少种挑法？这就是组合数 <code>C(n, k)</code>。</p><p>规定 <code>k &lt; 0</code> 或 <code>k &gt; n</code> 时答案是 0（根本挑不出来），<code>C(n, 0) = C(n, n) = 1</code>。</p><p>要输出精确值。C(2000, 1000) 是一个 601 位的数字，换成 C++ 早就溢出了，Python 的大整数直接算就行 —— 这就是选 Python 的理由之一。</p>",
+  "input_format": "一行两个整数 n 和 k（0 ≤ n ≤ 2000，0 ≤ k ≤ 2000）。",
+  "output_format": "一行一个整数，是 C(n, k) 的精确值，不要取模，完整写出来。",
+  "examples": [
+    {
+      "input": "5 2",
+      "output": "10\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 C(5,2)",
+      "input": "5 2\n",
+      "expected": "10\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 0 0",
+      "input": "0 0\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "k=0",
+      "input": "10 0\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "k=n",
+      "input": "10 10\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "k 比 n 大要输出 0",
+      "input": "7 9\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "利用对称性",
+      "input": "30 28\n",
+      "expected": "435\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机中等",
+      "input": "106 84\n",
+      "expected": "30770911698303332765300\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大 n=2000",
+      "input": "2000 1000\n",
+      "expected": "2048151626989489714335162502980825044396424887981397033820382637671748186202083755828932994182610206201464766319998023692415481798004524792018047549769261578563012896634320647148511523952516512277685886115395462561479073786684641544445336176137700738556738145896300713065104559595144798887462063687185145518285511731662762536637730846829322553890497438594814317550307837964443708100851637248274627914170166198837648408435414308177859470377465651884755146807496946749238030331018187232980096685674585602525499101181135253534658887941966653674904511306110096311906270342502293155911108976733963991149120\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>直接用 <code>math.comb(n, k)</code>；想写递推就是杨辉三角 <code>C(n,k) = C(n-1,k-1) + C(n-1,k)</code>，先把 k 换成 min(k, n-k) 更省时间。</p><p>坑：Python 3.11 起，把超过 4300 位的整数变成字符串会直接报错。如果哪天题目把 n 放到上万，程序开头要加一行 <code>import sys; sys.set_int_max_str_digits(0)</code>。</p>",
+    "code": "\"\"\"p13 组合计数：输出 C(n, k) 的精确值（不取模，Python 大整数直接算）。\nmath.comb 内部就是按最小对称性算的；k 超出 0..n 时按定义是 0。\n\"\"\"\nimport sys\nfrom math import comb\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    n, k = int(data[0]), int(data[1])\n    if k < 0 or k > n:\n        print(0)\n    else:\n        print(comb(n, k))\n\n\nmain()\n",
+    "output": "$ python p13_combination.py\n输入：5 2\n\n输出：10\r\n",
+    "reference": "code/ch12-math-date/01_perm_comb.py"
+  }
+}

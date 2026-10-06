@@ -1,0 +1,90 @@
+{
+  "id": "p02_time_display",
+  "order": 2,
+  "title": "时间显示",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "整除取余",
+    "格式化输出"
+  ],
+  "chapter": "第 13 章 08 / 第 1 章 基础语法",
+  "source": "蓝桥杯省赛真题（题意整理）",
+  "statement": "<p>一段程序跑了 <code>t</code> 毫秒，把它显示成 <code>时:分:秒</code> 的样子。</p><p>格式规定：小时该是几就写几，不补零；分钟和秒必须补零到两位，比如 1 点 2 分 3 秒要写成 <code>1:02:03</code>。</p><p>这道题没有算法，考的就是整除 <code>//</code> 和取余 <code>%</code> 的先后顺序，以及输出格式。毫秒先换成整秒，不满一秒的部分直接丢掉。</p>",
+  "input_format": "一行一个整数 t，表示毫秒数（0 ≤ t ≤ 86399999，保证不足一整天）。",
+  "output_format": "一行，格式为 H:MM:SS。小时不补零，分钟和秒都要补足两位。",
+  "examples": [
+    {
+      "input": "5000000",
+      "output": "1:23:20\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 5000000 毫秒",
+      "input": "5000000\n",
+      "expected": "1:23:20\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 0 毫秒",
+      "input": "0\n",
+      "expected": "0:00:00\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "不足一秒",
+      "input": "999\n",
+      "expected": "0:00:00\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "刚过一秒",
+      "input": "1000\n",
+      "expected": "0:00:01\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "整点",
+      "input": "3600000\n",
+      "expected": "1:00:00\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "分秒要补零",
+      "input": "43200000\n",
+      "expected": "12:00:00\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大 86399999",
+      "input": "86399999\n",
+      "expected": "23:59:59\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机",
+      "input": "47603506\n",
+      "expected": "13:13:23\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p><code>总秒数 = t // 1000</code>；小时 <code>= 总秒数 // 3600</code>，分钟 <code>= 总秒数 % 3600 // 60</code>，秒 <code>= 总秒数 % 60</code>。</p><p>输出用 f-string：<code>f&#34;{h}:{m:02d}:{s:02d}&#34;</code>，<code>02d</code> 表示不足两位就补零。写完拿 0、999、3600000、86399999 四个边界各跑一遍。</p>",
+    "code": "\"\"\"p02 时间显示：毫秒换成 H:MM:SS。\n小时不补零，分钟和秒补零到两位。\n\"\"\"\nimport sys\n\n\ndef fmt(t_ms):\n    total = t_ms // 1000            # 先化成整秒，多余的毫秒直接丢掉\n    h = total // 3600\n    m = total % 3600 // 60\n    s = total % 60\n    return f\"{h}:{m:02d}:{s:02d}\"\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    print(fmt(int(data[0])))\n\n\nmain()\n",
+    "output": "$ python p02_time_display.py\n输入：5000000\n\n输出：1:23:20\r\n",
+    "reference": "code/ch13-real-problems/08_time_display.py"
+  }
+}

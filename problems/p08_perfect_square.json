@@ -1,0 +1,90 @@
+{
+  "id": "p08_perfect_square",
+  "order": 8,
+  "title": "完全平方数",
+  "type": "prog",
+  "difficulty": "提高",
+  "score": 25,
+  "tags": [
+    "质因数分解",
+    "数论"
+  ],
+  "chapter": "第 9 章 18 / 第 5 章 13、第 13 章 14",
+  "source": "蓝桥杯省赛真题（题意整理）",
+  "statement": "<p>给一个正整数 <code>N</code>，找一个最小的正整数 <code>x</code>，让 <code>N * x</code> 刚好是完全平方数。</p><p>比如 N = 12：12 × 3 = 36 = 6 的平方，所以 x = 3。</p><p>完全平方数的每个质因子指数都是偶数。把 N 分解质因数，指数是奇数的那些质因子各差一个才能配对，把它们乘起来就是答案。别从 1 开始一个一个试 x，N 大到 10^12 时试不出来。</p>",
+  "input_format": "一行一个正整数 N（1 ≤ N ≤ 10^12）。",
+  "output_format": "一行一个正整数 x，是使 N*x 成为完全平方数的最小正整数。",
+  "examples": [
+    {
+      "input": "12",
+      "output": "3\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 N=12",
+      "input": "12\n",
+      "expected": "3\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 N=1",
+      "input": "1\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "本身就是平方数",
+      "input": "36\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "N=2022",
+      "input": "2022\n",
+      "expected": "2022\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "含高次幂 512",
+      "input": "512\n",
+      "expected": "2\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "三个不同质因子 4199",
+      "input": "4199\n",
+      "expected": "4199\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机 10 位数",
+      "input": "4690726433\n",
+      "expected": "4690726433\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大 N=1e12",
+      "input": "1000000000000\n",
+      "expected": "1\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>试除分解：先除干净 2，再从 3 开始只试奇数，直到 <code>d * d &gt; n</code>，剩下的 n 若大于 1 就是一个质因子。答案 = 所有指数为奇数的质因子之积。</p><p>验证用 <code>math.isqrt</code>：算出 r 后判断 <code>r*r == N*x</code>。千万别用 <code>int((N*x) ** 0.5)</code>，浮点数只有 53 位有效二进制位，大数上会开错。</p>",
+    "code": "\"\"\"p08 完全平方数：给 N，求最小正整数 x，使 N*x 是完全平方数。\n把 N 分解质因数：N = p1^e1 * p2^e2 ...\n指数是偶数的质因子已经配成对，指数是奇数的还差一个，把它们各补一次乘起来就是 x。\n\"\"\"\nimport sys\n\n\ndef factorize(n):\n    \"\"\"返回 {质因子: 指数}，只依赖试除。\"\"\"\n    f = {}\n    d = 2\n    while d * d <= n:\n        while n % d == 0:\n            f[d] = f.get(d, 0) + 1\n            n //= d\n        d += 1 if d == 2 else 2       # 2 以后只试奇数\n    if n > 1:\n        f[n] = f.get(n, 0) + 1\n    return f\n\n\ndef min_x(n):\n    res = 1\n    for p, e in factorize(n).items():\n        if e % 2 == 1:\n            res *= p\n    return res\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    print(min_x(int(data[0])))\n\n\nmain()\n",
+    "output": "$ python p08_perfect_square.py\n输入：12\n\n输出：3\r\n",
+    "reference": "code/ch09-number-theory/18_real_perfect_square.py"
+  }
+}

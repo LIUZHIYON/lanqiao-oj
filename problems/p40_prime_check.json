@@ -1,0 +1,90 @@
+{
+  "id": "p40_prime_check",
+  "order": 40,
+  "title": "素数判定",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "素数",
+    "试除"
+  ],
+  "chapter": "第 2 章 循环与 break",
+  "source": "蓝桥杯风格语法练习",
+  "statement": "<p>给 n 个正整数，逐个判断是不是素数：是输出 <code>yes</code>，不是输出 <code>no</code>，最后再单独一行输出素数一共有几个。</p><p>素数是大于 1、只能被 1 和自己整除的整数。<strong>1 不是素数，2 是最小的素数，也是唯一的偶素数。</strong></p><p>试除只要试到平方根就够：如果 <code>d * d</code> 已经超过 x 还没找到因子，x 一定是素数。用 <code>math.isqrt(x)</code> 直接拿整数平方根。</p>",
+  "input_format": "第一行一个整数 n（1 ≤ n ≤ 200）；第二行 n 个正整数，空格分隔，每个数在 1 到 2000000000 之间。",
+  "output_format": "前 n 行每行一个 yes 或 no，顺序与输入一致；第 n+1 行一个整数，是素数的个数。",
+  "examples": [
+    {
+      "input": "4\n2 3 4 1",
+      "output": "yes\r\nyes\r\nno\r\nno\r\n2\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 2 3 4 1",
+      "input": "4\n2 3 4 1\n",
+      "expected": "yes\r\nyes\r\nno\r\nno\r\n2\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 n=1 值是 1",
+      "input": "1\n1\n",
+      "expected": "no\r\n0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最小素数 2",
+      "input": "1\n2\n",
+      "expected": "yes\r\n1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "1 到 8 挨个判",
+      "input": "8\n1 2 3 4 5 6 7 8\n",
+      "expected": "no\r\nyes\r\nyes\r\nno\r\nyes\r\nno\r\nyes\r\nno\r\n4\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "平方数与大合数",
+      "input": "4\n121 169 1000000000 999999937\n",
+      "expected": "no\r\nno\r\nno\r\nyes\r\n1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "大素数与上界",
+      "input": "3\n1000000007 999999929 2000000000\n",
+      "expected": "yes\r\nyes\r\nno\r\n2\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机 20 个",
+      "input": "20\n579512 516943 631186 208823 458960 445529 448901 570114 923045 160804 605342 555920 520142 801563 567070 68427 686063 58154 2899 383420\n",
+      "expected": "no\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\n0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "较大规模 n=200 大数",
+      "input": "200\n371343211 1782035018 286171322 1486443691 404537642 708518711 1362967628 1536445102 350132353 980652756 175506698 128447050 1300995564 601365048 1275932945 1093575487 1259900989 1185708643 1062461668 1093363546 1529039528 1815764981 292290641 1005354415 276274964 1493759091 1918209414 460485689 946204569 613839429 1957448984 897680671 132684238 1458011104 1090543816 345721561 447267821 286348464 139524272 1002423071 540808337 603117775 1870897542 1767557070 818848551 662470814 328987479 1159813633 698395051 1008529791 1580795398 1179791643 300189235 185871798 724280163 833777854 1080902783 1887990177 1879712615 109203030 627870352 1881011220 1403193498 500636072 835592425 309137426 1991567210 1927681370 717133074 477882799 1445117595 1649111131 994333029 295445248 1537520206 282974468 675877700 1814701291 515141006 1266491643 1248824096 132918040 1066532727 777337521 506712891 1037975475 851867092 783731561 750302364 104484378 1646202239 893568636 548678147 1657815645 191541981 1686663173 487124624 867444853 261619182 180153299 991705291 1681641666 215364383 525267612 558003485 1337394842 114583441 1741042158 586628360 460705108 1643937083 1887641361 1480095317 1163615862 1514209438 321245934 551238566 1591867637 807360779 1960343951 947019862 1042135300 933909184 141410790 239869949 628085170 1618449314 563021710 1114619180 1485130983 610070542 516169954 352855540 870746024 264282748 1310684206 1845232883 801249745 248303255 1476466104 1256957851 743251362 1340455441 1392318629 1115291154 1172584401 426675139 1524829710 428290043 1690306617 1334610222 1067480867 1413532321 1459659985 643348350 962512620 160572166 498368366 1734455481 276488217 1204449979 194292056 1353302380 362478134 1025939883 1067418944 1644516209 729149030 1255743863 627365091 1891543292 1601504695 1352564333 1654693465 1658555802 1964134957 1334218683 1713573566 1699132225 1609203563 1877471852 1914301373 1493583206 761375004 252268266 1300922960 220140751 991207091 405166327 887572151 1241212388 1093926335 1175603440 1634980843 1865415505 677907891 1512782641 1898874975 547776993 1143644897\n",
+      "expected": "no\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nyes\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nyes\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nyes\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nyes\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nyes\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nyes\r\nno\r\nyes\r\nno\r\nno\r\nno\r\nno\r\nyes\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nyes\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\n9\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>写一个 <code>is_prime(x)</code>：<code>x &lt; 2</code> 直接 False；<code>x == 2</code> 是 True；偶数直接 False；剩下的让因子 d 从 3 起每次加 2，试到 <code>isqrt(x)</code> 为止。</p><p>试到平方根是这题的分水岭：20 亿开根约 44721，判一次最多两万多次数；要是傻试到 x 的一半，一次就是一亿次循环，直接超时。</p>",
+    "code": "\"\"\"p40 素数判定：读入 n 个正整数，逐个输出 yes/no，最后输出素数个数。\n练的语法点：isqrt 试除。只需试到平方根，先把 2 单独处理，再试奇数。\n\"\"\"\nimport sys\nfrom math import isqrt\n\n\ndef is_prime(x):\n    if x < 2:\n        return False\n    if x == 2:\n        return True\n    if x % 2 == 0:\n        return False\n    limit = isqrt(x)\n    d = 3\n    while d <= limit:\n        if x % d == 0:\n            return False\n        d += 2\n    return True\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    n = int(data[0])\n    nums = [int(x) for x in data[1:1 + n]]\n    lines = []\n    cnt = 0\n    for v in nums:\n        ok = is_prime(v)\n        cnt += 1 if ok else 0\n        lines.append(\"yes\" if ok else \"no\")\n    lines.append(str(cnt))\n    sys.stdout.write(\"\\n\".join(lines) + \"\\n\")\n\n\nmain()\n",
+    "output": "$ python p40_prime_check.py\n输入：4\n2 3 4 1\n\n输出：yes\r\nyes\r\nno\r\nno\r\n2\r\n",
+    "reference": "code/ch02-control/16_ex1_prime.py"
+  }
+}

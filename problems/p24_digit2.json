@@ -1,0 +1,31 @@
+{
+  "id": "p24_digit2",
+  "order": 24,
+  "title": "含数字 2 的数",
+  "type": "fill",
+  "difficulty": "入门",
+  "score": 10,
+  "tags": [
+    "数位统计",
+    "枚举"
+  ],
+  "chapter": "第 13 章 15 / 首页必做清单第 20 题",
+  "source": "蓝桥杯常考填空题（题意整理）",
+  "statement": "<p>把 1 到 2026 这些整数依次写出来。</p><p>问其中<strong>含有数字 2</strong> 的数一共有多少个。2 出现一次还是多次都只算一个数，比如 2、12、202、222 各算一个。</p><p>注意看清问法：这一题问几个数，下一题问出现几次，两个数不一样。</p>",
+  "input_format": "填空题不需要写输入，把最终结果（一个数字或一串字符）填进答题区即可。",
+  "output_format": "只要最终结果，过程不记分。",
+  "examples": [],
+  "limits": {
+    "time_ms": 2000
+  },
+  "answer": "569",
+  "answer_hint": "问的是多少个数，不是数字 2 出现多少次：222 这样的数只能算一个。",
+  "tests": [],
+  "solution": {
+    "idea": "<p>最稳的做法就是写循环：用 <code>'2' in str(x)</code> 判断再计数，两千多个数一眨眼就跑完了。填空题就该这么干。</p><p>再用整除取余一位一位判断核对一次；想练数位统计就反过来数每一位都不是 2 的数，用乘法原理算完再拿总数去减，三种办法一致才填。</p>",
+    "code": "\"\"\"p24 填空：1~2026 这些数里，含有数字 2 的数一共有多少个（22 只算一个数）。\n做法 A：逐个把数变成字符串判断。\n做法 B：用整除和取余一位一位看。\n做法 C：反过来数\"不含 2 的数\"（按位计数原理），再用总数去减。\n\"\"\"\n\nLIMIT = 2026\n\n\ndef has_two_str(x):\n    return '2' in str(x)\n\n\ndef has_two_div(x):\n    while x:\n        if x % 10 == 2:\n            return True\n        x //= 10\n    return False\n\n\ndef by_position_count(n):\n    \"\"\"1..n 中至少有一位是 2 的数的个数：先数每一位都不是 2 的（不含前导零问题\n    用\"补成同样长度、允许前导零\"的办法处理，再减掉全 0 的那一个）。\"\"\"\n    s = str(n)\n    # 长度比 s 短的数：每个位置可取除 2 外的 9 个数字，减掉全 0\n    total_short = 0\n    for length in range(1, len(s)):\n        total_short += 8 * 9 ** (length - 1)          # 首位不能是 0 也不能是 2\n    # 与 s 等长且不超过 s 的：逐位比较\n    cnt = 0\n    prefix_ok = True\n    for i, ch in enumerate(s):\n        d = int(ch)\n        rest = len(s) - i - 1\n        for nd in range(0 if i else 1, d):            # 本位取一个比 s 小的数字\n            if nd == 2 or (i == 0 and nd == 0):\n                continue\n            cnt += 9 ** rest                          # 后面每位都能取非 2 的 9 个\n        if d == 2:\n            prefix_ok = False\n            break\n    if prefix_ok:\n        cnt += 1                                      # s 本身也不含 2\n    no_two = total_short + cnt\n    return n - no_two\n\n\na = sum(1 for x in range(1, LIMIT + 1) if has_two_str(x))\nb = sum(1 for x in range(1, LIMIT + 1) if has_two_div(x))\nc = by_position_count(LIMIT)\nassert a == b == c, (a, b, c)\nfor small in (9, 25, 130, 999, 1500):\n    assert by_position_count(small) == sum(1 for x in range(1, small + 1) if has_two_str(x)), small\nprint(a)\n",
+    "output": "$ python p24_digit2_count.py\n569",
+    "reference": "code/ch13-real-problems/15_digit_stats.py",
+    "answer": "569"
+  }
+}

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231c4f9c'/%3E%3Crect x='6' y='7' width='20' height='4' rx='2' fill='%23ffffff'/%3E%3Crect x='6' y='15' width='14' height='3' rx='1.5' fill='%23a9c8ee'/%3E%3Crect x='6' y='22' width='17' height='3' rx='1.5' fill='%23a9c8ee'/%3E%3C/svg%3E">
+<title>我的提交 · 蓝桥杯 Python 模拟训练平台</title>
+<link rel="stylesheet" href="assets/oj.css">
+</head>
+<body data-page="submissions">
+<header id="topbar"></header>
+
+<main class="wrap">
+  <h2 class="page-title">我的提交</h2>
+  <div id="app"><div class="card loading"><span class="spin"></span>正在读取提交记录…</div></div>
+</main>
+
+<footer id="foot"></footer>
+
+<script src="assets/oj.js"></script>
+<script>
+(function () {
+  'use strict';
+  var el = OJ.el;
+  OJ.initChrome('submissions');
+
+  var state = { items: [], probs: {}, f: { problem: OJ.qs('problem') || '', result: '', kind: '', q: '' } };
+  var tableHost = null;
+
+  function match(s) {
+    var f = state.f;
+    if (f.problem && s.problem_id !== f.problem) { return false; }
+    if (f.result === 'AC' && s.result !== 'AC') { return false; }
+    if (f.result === 'NA' && s.result === 'AC') { return false; }
+    if (f.kind === 'code' && s.kind !== 'code') { return false; }
+    if (f.kind === 'answer' && s.kind !== 'answer') { return false; }
+    if (f.q) {
+      var p = state.probs[s.problem_id] || {};
+      var hay = [s.problem_id, p.title || '', s.result, OJ.resultLabel(s.result, null)].join(' ').toLowerCase();
+      if (hay.indexOf(f.q) < 0) { return false; }
+    }
+    return true;
+  }
+
+  function select(label, key, options, allText) {
+    var sel = el('select', { id: 'f_' + key });
+    sel.appendChild(el('option', { value: '', text: allText }));
+    options.forEach(function (o) { sel.appendChild(el('option', { value: o.v, text: o.t })); });
+    sel.value = state.f[key] || '';
+    if (sel.value !== (state.f[key] || '')) { sel.value = ''; }
+    sel.addEventListener('change', function () { state.f[key] = sel.value; refresh(); });
+    return el('label', { class: 'field' }, [document.createTextNode(label), sel]);
+  }
+
+  function filterCard() {
+    var opts = Object.keys(state.probs).map(function (id) {
+      return { v: id, t: state.probs[id].title + '（' + id + '）' };
+    }).sort(function (a, b) { return a.v.localeCompare(b.v); });
+    var kinds = [];
+    state.items.forEach(function (s) { if (kinds.indexOf(s.kind) < 0) { kinds.push(s.kind); } });
+
+    var search = el('input', { type: 'search', id: 'f_q', placeholder: '题号 / 标题关键字' });
+    search.addEventListener('input', function () { state.f.q = search.value.trim().toLowerCase(); refresh(); });
+
+    var reset = el('button', { class: 'btn warn', type: 'button', text: '清空全部记录', onclick: function () {
+      if (!confirm('这会删掉本机所有提交记录、题解记录和模拟赛成绩（data/oj.db 里的表），确定吗？')) { return; }
+      if (!confirm('再确认一次：真的全部清空？')) { return; }
+      OJ.api.post('reset').then(function () { location.reload(); }, function (err) {
+        alert((err && err.message) || '清空失败');
+      });
+    } });
+
+    return el('section', { class: 'card' }, [
+      el('h3', { class: 'card-title' }, [document.createTextNode('筛选'),
+        el('span', { class: 'sub', text: '点任意一行可以跳到那道题' })]),
+      el('div', { class: 'filters' }, [
+        select('题目', 'problem', opts, '全部题目'),
+        select('结果', 'result', [{ v: 'AC', t: '通过' }, { v: 'NA', t: '没通过' }], '全部结果'),
+        select('方式', 'kind', [{ v: 'code', t: '交代码' }, { v: 'answer', t: '交答案' }], '全部方式'),
+        el('label', { class: 'field grow' }, [document.createTextNode('搜索'), search]),
+        reset
+      ]),
+      el('p', { class: 'muted small', id: 'fCount' })
+    ]);
+  }
+
+  function row(s) {
+    var p = state.probs[s.problem_id] || {};
+    var full = s.full_score || p.score || 0;
+    var kind = s.kind === 'answer' ? '答案' : '代码';
+    var detail = el('tr', { class: 'sub-row hidden' }, [el('td', { colspan: '8' })]);
+    var cellDiv = detail.firstChild;
+    if (s.kind === 'answer') {
+      var lab = el('div', { class: 'muted small', text: '提交的答案：' });
+      var a = el('pre', { class: 'code-view' });
+      a.textContent = String(s.answer || '（空）');
+      cellDiv.appendChild(lab); cellDiv.appendChild(a);
+    } else {
+      var lab2 = el('div', { class: 'muted small', text: '提交的代码：' });
+      var c = el('pre', { class: 'code-view' });
+      c.textContent = String(s.code || '（空）');
+      cellDiv.appendChild(lab2); cellDiv.appendChild(c);
+    }
+    if (s.detail) {
+      var lab3 = el('div', { class: 'muted small', text: '服务端信息：' });
+      cellDiv.appendChild(lab3);
+      var d = el('pre', { class: 'code-view' });
+      d.textContent = String(s.detail);
+      cellDiv.appendChild(d);
+    }
+    var tr = el('tr', { class: 'clickable', onclick: function (e) {
+      if (e.target && e.target.tagName === 'BUTTON') { return; }
+      location.href = OJ.linkProblem(s.problem_id, s.contest_id);
+    } }, [
+      el('td', { class: 'mono nowrap', text: '#' + s.id }),
+      el('td', { class: 'nowrap', text: OJ.fmtTime(s.created_at) }),
+      el('td', {}, [
+        el('a', { href: OJ.linkProblem(s.problem_id), text: p.title || s.problem_id }),
+        el('span', { class: 'muted small mono', text: ' ' + s.problem_id }),
+        s.contest_id ? el('span', { class: 'badge d-unknown', text: '模拟赛 #' + s.contest_id }) : null
+      ]),
+      el('td', { class: 'nowrap', text: kind }),
+      el('td', { class: 'nowrap' }, [OJ.statusNode(s.result, null)]),
+      el('td', { class: 'num nowrap', text: OJ.fmtScore(s.score) + ' / ' + OJ.fmtScore(full) }),
+      el('td', { class: 'num nowrap', text: s.total ? (s.passed + '/' + s.total) : '—' }),
+      el('td', { class: 'nowrap' }, [
+        el('span', { class: 'num small muted', text: s.kind === 'answer' ? '—' : OJ.fmtMs(s.ms) }),
+        el('button', { class: 'btn small ghost', type: 'button', text: '展开', onclick: function () {
+          detail.classList.toggle('hidden');
+          this.textContent = detail.classList.contains('hidden') ? '展开' : '收起';
+        } })
+      ])
+    ]);
+    return [tr, detail];
+  }
+
+  function refresh() {
+    var list = state.items.filter(match);
+    var body = el('tbody');
+    list.forEach(function (s) { row(s).forEach(function (n) { body.appendChild(n); }); });
+    if (!list.length) {
+      body.appendChild(el('tr', {}, [el('td', { colspan: '8', class: 'empty',
+        text: state.items.length ? '没有符合条件的提交，换个筛选条件。' : '还没有任何提交记录。去题库挑一道题开始吧。' })]));
+    }
+    var t = el('table', { class: 'grid' }, [
+      el('thead', {}, [el('tr', {}, [
+        el('th', { text: '编号' }), el('th', { text: '时间' }), el('th', { text: '题目' }),
+        el('th', { text: '方式' }), el('th', { text: '结果' }), el('th', { class: 'num', text: '得分' }),
+        el('th', { class: 'num', text: '通过' }), el('th', { text: '用时 / 操作' })
+      ])]),
+      body
+    ]);
+    OJ.clear(tableHost).appendChild(el('div', { class: 'table-scroll' }, [t]));
+    var ac = list.filter(function (s) { return s.result === 'AC'; }).length;
+    var c = document.getElementById('fCount');
+    if (c) {
+      c.textContent = '共 ' + state.items.length + ' 条记录，当前显示 ' + list.length + ' 条，其中通过 ' + ac +
+        ' 条。（列表最多取最近 300 条）';
+    }
+  }
+
+  function boot() {
+    Promise.all([OJ.api.get('submissions', { limit: 300 }), OJ.api.get('problems')])
+      .then(function (res) {
+        state.items = (res[0] && res[0].items) || [];
+        ((res[1] && res[1].items) || []).forEach(function (p) { state.probs[p.id] = p; });
+        var st = (res[1] && res[1].stats) || {};
+        OJ.setNavStat(st.solved, st.problems);
+        var app = OJ.clear(document.getElementById('app'));
+        app.appendChild(filterCard());
+        tableHost = el('section', { class: 'card' });
+        app.appendChild(tableHost);
+        refresh();
+      }, function (err) {
+        var app = OJ.clear(document.getElementById('app'));
+        app.appendChild(OJ.failBox(err));
+        app.appendChild(el('p', {}, [el('button', { class: 'btn ghost', type: 'button', text: '重新读取', onclick: boot })]));
+      });
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

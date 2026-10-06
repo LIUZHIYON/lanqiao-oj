@@ -1,0 +1,96 @@
+{
+  "id": "p30_seconds_convert",
+  "order": 30,
+  "title": "秒数换算",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "整除取余"
+  ],
+  "chapter": "第 1 章 运算符",
+  "source": "蓝桥杯风格语法练习",
+  "statement": "<p>一段时间用总秒数表示，把它拆成 <code>天 时 分 秒</code> 四个数。</p><p>进率：1 分 = 60 秒，1 时 = 3600 秒，1 天 = 86400 秒。</p><p>算法是大单位先算：先取天数，把剩下的秒数拿来算小时，再算分钟，最后剩下的就是秒。整除 <code>//</code> 拿商，取余 <code>%</code> 留零头，一级一级往下剥。</p>",
+  "input_format": "一行一个非负整数 s（0 ≤ s ≤ 10^9），表示总秒数。",
+  "output_format": "一行四个整数：天 时 分 秒，用一个空格分隔，不补零。",
+  "examples": [
+    {
+      "input": "100000",
+      "output": "1 3 46 40\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 100000 秒",
+      "input": "100000\n",
+      "expected": "1 3 46 40\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 0 秒",
+      "input": "0\n",
+      "expected": "0 0 0 0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "不足一分钟",
+      "input": "59\n",
+      "expected": "0 0 0 59\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "正好一分钟",
+      "input": "60\n",
+      "expected": "0 0 1 0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "差一秒到整点",
+      "input": "3599\n",
+      "expected": "0 0 59 59\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "差一秒到整天",
+      "input": "86399\n",
+      "expected": "0 23 59 59\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "正好一整天",
+      "input": "86400\n",
+      "expected": "1 0 0 0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机中间值",
+      "input": "955255265\n",
+      "expected": "11056 4 41 5\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "上界 10^9 秒",
+      "input": "1000000000\n",
+      "expected": "11574 1 46 40\r\n",
+      "score": 6,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p><code>day = s // 86400</code>，<code>rest = s % 86400</code>；接着 <code>hour = rest // 3600</code>、<code>rest %= 3600</code>、<code>minute = rest // 60</code>、<code>second = rest % 60</code>。</p><p>写完拿 59、60、3599、86399、86400 这几个数口算对一遍，一秒都不能差。</p>",
+    "code": "\"\"\"p30 秒数换算：把总秒数换成 天 时 分 秒 四个数。\n练的语法点：连续整除与取余，先算大单位，再拿剩下的去算小单位。\n\"\"\"\nimport sys\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    s = int(data[0])\n    day = s // 86400\n    rest = s % 86400\n    hour = rest // 3600\n    rest %= 3600\n    minute = rest // 60\n    second = rest % 60\n    print(day, hour, minute, second)\n\n\nmain()\n",
+    "output": "$ python p30_seconds_convert.py\n输入：100000\n\n输出：1 3 46 40\r\n",
+    "reference": "code/ch01-basics/24_ex_seconds.py"
+  }
+}

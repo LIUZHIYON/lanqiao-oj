@@ -1,0 +1,31 @@
+{
+  "id": "p17_snake",
+  "order": 17,
+  "title": "蛇形填数",
+  "type": "fill",
+  "difficulty": "入门",
+  "score": 10,
+  "tags": [
+    "找规律",
+    "模拟"
+  ],
+  "chapter": "第 13 章 03 / 第 5 章 枚举",
+  "source": "蓝桥杯省赛真题（题意整理）",
+  "statement": "<p>把 1、2、3、…… 沿斜线填进一张很大的方格表：行号加列号相同的格子算同一条斜线，每条斜线上从最上面那一行开始往下填。</p><pre>行1:  1  2  4  7 11\n行2:  3  5  8 12\n行3:  6  9 13\n行4: 10 14\n行5: 15</pre><p>问第 20 行第 20 列那个格子里的数是多少。</p>",
+  "input_format": "填空题不需要写输入，把最终结果（一个数字或一串字符）填进答题区即可。",
+  "output_format": "只要最终结果，过程不记分。",
+  "examples": [],
+  "limits": {
+    "time_ms": 2000
+  },
+  "answer": "761",
+  "answer_hint": "先确认规则：本题是同一条斜线上从最上面那行开始往下填，不是来回交替的之字形。",
+  "tests": [],
+  "solution": {
+    "idea": "<p>先按规则真的模拟填一遍（用字典记 (行,列) 到数值），再推公式：设 s = 行 + 列，前面 s-2 条斜线一共有 <code>(s-2)(s-1)/2</code> 个数，本条斜线上它排第行个，所以值 = <code>(s-2)*(s-1)//2 + 行</code>。</p><p>把 20x20 范围内每一格的模拟值和公式值逐格比对，全一致才填。</p>",
+    "code": "\"\"\"p17 填空：蛇形填数（沿反对角线、每条斜线从上往下填），第 20 行第 20 列是多少。\n真模拟填一遍和套公式，两边必须一致。\n\"\"\"\n\n\ndef build_grid(max_diag):\n    g = {}\n    val = 1\n    for s in range(2, max_diag + 1):          # s = 行号 + 列号\n        for i in range(1, s):\n            g[(i, s - i)] = val\n            val += 1\n    return g\n\n\ndef formula(row, col):\n    s = row + col                              # 第 s 条斜线\n    return (s - 2) * (s - 1) // 2 + row        # 前 s-2 条斜线共 (s-2)(s-1)/2 个数\n\n\ng = build_grid(40)\nfor r in range(1, 21):\n    for c in range(1, 21):\n        assert g[(r, c)] == formula(r, c), (r, c)\nprint(formula(20, 20))\n",
+    "output": "$ python p17_snake.py\n761",
+    "reference": "code/ch13-real-problems/03_snake_grid.py",
+    "answer": "761"
+  }
+}

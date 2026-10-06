@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231c4f9c'/%3E%3Crect x='6' y='7' width='20' height='4' rx='2' fill='%23ffffff'/%3E%3Crect x='6' y='15' width='14' height='3' rx='1.5' fill='%23a9c8ee'/%3E%3Crect x='6' y='22' width='17' height='3' rx='1.5' fill='%23a9c8ee'/%3E%3C/svg%3E">
+<title>题目 · 蓝桥杯 Python 模拟训练平台</title>
+<link rel="stylesheet" href="assets/oj.css">
+</head>
+<body data-page="problem">
+<header id="topbar"></header>
+
+<main class="wrap">
+  <div class="crumb"><a href="problems">题库</a> / <span id="crumbName">题目</span></div>
+  <div id="noticeHost"></div>
+  <div id="app"><div class="card loading"><span class="spin"></span>正在读取题目…</div></div>
+</main>
+
+<footer id="foot"></footer>
+
+<script src="assets/oj.js"></script>
+<script>
+(function () {
+  'use strict';
+  var el = OJ.el;
+  OJ.initChrome('problems');
+
+  var PID = OJ.qs('id');
+  var CID = OJ.qs('contest_id');
+  var prob = null, best = {}, history = [], unlocked = false;
+  var ta = null, ansInput = null, draftInfo = null, lineInfo = null, saveTimer = null;
+  var solFetched = false, solHost = null, solBody = null, verdictHost = null, currentPid = PID;
+
+  if (!PID) {
+    OJ.clear(document.getElementById('app')).appendChild(el('div', { class: 'fail-box' }, [
+      el('h3', { text: '没有指定题目编号' }),
+      el('p', { text: '地址应该是 problem?id=题目编号，例如 problem?id=p01_year_string。' }),
+      el('p', {}, [el('a', { class: 'btn', href: 'problems', text: '回到题库' })])
+    ]));
+    return;
+  }
+
+  /* ---------------- 左栏：题干 ---------------- */
+
+  function ioBox(label, text) {
+    var body = el('pre');
+    body.textContent = text === '' || text === undefined || text === null ? '（空）' : String(text);
+    var btn = el('button', { class: 'copy-btn', type: 'button', text: '复制',
+      onclick: function () { OJ.copyText(String(text || ''), btn); } });
+    return el('div', { class: 'io-box' }, [
+      el('div', { class: 'io-head' }, [el('span', { text: label }), btn]),
+      body
+    ]);
+  }
+
+  function sec(title, kids) {
+    return el('div', { class: 'sec' }, [el('h4', { text: title })].concat(kids || []));
+  }
+
+  function fmtLine(text) {
+    var n = el('pre', { class: 'fmt-line' });
+    if (text) { n.textContent = String(text); }
+    else { n.className = 'fmt-line empty-fmt'; n.textContent = '（本题没有单独的格式说明）'; }
+    return n;
+  }
+
+  var LIMIT_LABEL = {
+    time_ms: '时间限制（毫秒）', ms: '时间限制（毫秒）', mem_mb: '内存限制（MB）',
+    len: '数据规模', n_max: '数据规模'
+  };
+
+  function limitsText(p) {
+    var L = p.limits || {};
+    var keys = Object.keys(L);
+    if (!keys.length) { return ['与蓝桥杯省赛类似，本机 Python 判题，正常写法都不会超时。']; }
+    return keys.map(function (k) {
+      var v = L[k];
+      var label = LIMIT_LABEL[k] || k;
+      return label + '：' + (typeof v === 'object' ? JSON.stringify(v) : String(v));
+    });
+  }
+
+  function statementCard(p) {
+    var card = el('section', { class: 'card stmt' });
+    var meta = el('div', { class: 'p-meta' }, [
+      el('span', { class: 'badge ' + (p.type === 'fill' ? 'b-fill' : 'b-prog'), text: OJ.typeLabel(p.type) + '题' }),
+      el('span', { class: 'badge ' + OJ.diffClass(p.difficulty), text: p.difficulty || '未标注' }),
+      el('span', { class: 'badge d-unknown', text: OJ.fmtScore(p.score) + ' 分' }),
+      p.type === 'prog' ? el('span', { class: 'badge d-unknown', text: (p.test_count || 0) + ' 个测试点' }) : null
+    ]);
+    (p.tags || []).forEach(function (t) { meta.appendChild(el('span', { class: 'tag-chip', text: t })); });
+    meta.appendChild(statusBadge(p));
+    meta.appendChild(starBtn());
+    card.appendChild(el('div', { class: 'p-head' }, [
+      el('h2', { class: 'p-title' }, [
+        p.order ? el('span', { class: 'p-no', text: '第 ' + p.order + ' 题' }) : null,
+        document.createTextNode(p.title || p.id)
+      ]),
+      meta,
+      el('div', { class: 'muted small mono', text: '题库编号 ' + p.id + (p.order ? '（第 ' + p.order + ' 题）' : '') })
+    ]));
+
+    var body = el('div', { class: 'stmt-body' });
+    body.innerHTML = p.statement || '<p>（本题没有题干）</p>';
+    card.appendChild(sec('题目描述', [body]));
+    card.appendChild(sec('输入格式', [fmtLine(p.input_format)]));
+    card.appendChild(sec('输出格式', [fmtLine(p.output_format)]));
+
+    var ex = p.examples || [];
+    if (ex.length) {
+      var box = el('div');
+      ex.forEach(function (e, i) {
+        box.appendChild(el('div', { class: 'muted small', text: '样例 ' + (i + 1) }));
+        box.appendChild(ioBox('输入', e.input));
+        box.appendChild(ioBox('输出', e.output));
+      });
+      card.appendChild(sec('样例', [box]));
+    }
+
+    card.appendChild(sec('数据范围', [el('ul', {}, limitsText(p).map(function (t) { return el('li', { text: t }); }))]));
+
+    if (p.hint) { card.appendChild(sec('提示', [el('p', { text: String(p.hint) })])); }
+
+    var notes = [];
+    if (p.source) { notes.push('来源：' + p.source); }
+    if (p.chapter) { notes.push('对应讲义：' + p.chapter); }
+    notes.push('判题在本机进行，提交后结果立刻出来；草稿自动保存在这台电脑的浏览器里。');
+    card.appendChild(sec('说明', notes.map(function (t) { return el('p', { text: t }); })));
+    return card;
+  }
+
+  function statusBadge(p) {
+    if (p.type === 'prog') {
+      if (best.solved) { return el('span', { class: 'st solved', text: '已解（最好 ' + OJ.fmtScore(best.score) + '/' + OJ.fmtScore(p.score) + ' 分）' }); }
+      if (best.tries) { return el('span', { class: 'st tried', text: '尝试 ' + best.tries + ' 次，最好 ' + OJ.fmtScore(best.score) + '/' + OJ.fmtScore(p.score) + ' 分' }); }
+      return el('span', { class: 'st todo', text: '还没交过' });
+    }
+    if (best.solved) { return el('span', { class: 'st solved', text: '已解' }); }
+    if (best.tries) { return el('span', { class: 'st tried', text: '尝试 ' + best.tries + ' 次' }); }
+    return el('span', { class: 'st todo', text: '还没交过' });
+  }
+
+  /* ---------------- 右栏：代码 / 答案 ---------------- */
+
+  function updateLineInfo() {
+    if (!ta) { return; }
+    var v = ta.value;
+    var lines = v ? v.split('\n').length : 0;
+    lineInfo.textContent = '第 ' + (ta.selectionStart ? v.slice(0, ta.selectionStart).split('\n').length : 1) +
+      ' 行 / 共 ' + lines + ' 行 · ' + v.length + ' 个字符';
+  }
+
+  function scheduleSave() {
+    if (!ta) { return; }
+    if (saveTimer) { clearTimeout(saveTimer); }
+    draftInfo.textContent = '正在保存草稿…';
+    saveTimer = setTimeout(function () {
+      var t = new Date();
+      OJ.saveDraft(currentPid, ta.value);
+      draftInfo.textContent = '草稿已保存 ' + (t.getHours() < 10 ? '0' : '') + t.getHours() + ':' +
+        (t.getMinutes() < 10 ? '0' : '') + t.getMinutes() + '（本题独立保存，切题不会串）';
+    }, 400);
+  }
+
+  function indentOrInsert(e) {
+    if (!ta) { return; }
+    var s = ta.selectionStart, en = ta.selectionEnd, v = ta.value;
+    if (e.shiftKey) {
+      var lineStart = v.lastIndexOf('\n', s - 1) + 1;
+      var cut = Math.min(4, (function () { var n = 0; while (v[lineStart + n] === ' ') { n++; } return n; })());
+      if (cut > 0) {
+        e.preventDefault();
+        ta.value = v.slice(0, lineStart) + v.slice(lineStart + cut);
+        ta.selectionStart = Math.max(lineStart, s - cut);
+        ta.selectionEnd = Math.max(lineStart, en - cut);
+      }
+      return;
+    }
+    e.preventDefault();
+    if (s !== en) {                       // 选中多行：整块缩进
+      var block = v.slice(s, en);
+      var indented = block.split('\n').map(function (x) { return '    ' + x; }).join('\n');
+      ta.value = v.slice(0, s) + indented + v.slice(en);
+      ta.selectionStart = s;
+      ta.selectionEnd = s + indented.length;
+    } else {
+      ta.value = v.slice(0, s) + '    ' + v.slice(en);
+      ta.selectionStart = ta.selectionEnd = s + 4;
+    }
+  }
+
+  function codeCard(p) {
+    ta = el('textarea', {
+      class: 'code', id: 'code', spellcheck: 'false', autocomplete: 'off',
+      placeholder: '# 在这里写 Python 代码\n# 用 sys.stdin 读入，用 print 输出\n# 按 Ctrl + Enter 提交'
+    });
+    ta.value = OJ.loadDraft(currentPid);
+    lineInfo = el('span', { class: 'muted small' });
+    draftInfo = el('span', { class: 'muted small' });
+
+    ta.addEventListener('keydown', function (e) {
+      if (e.key === 'Tab') { indentOrInsert(e); updateLineInfo(); scheduleSave(); }
+      else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submitCode(); }
+    });
+    ta.addEventListener('input', function () { updateLineInfo(); scheduleSave(); });
+    ta.addEventListener('click', updateLineInfo);
+    ta.addEventListener('keyup', updateLineInfo);
+
+    var btnSubmit = el('button', { class: 'btn big', type: 'button', id: 'btnSubmit', text: '提交代码',
+      onclick: function () { submitCode(); } });
+    var btnClear = el('button', { class: 'btn ghost', type: 'button', text: '清空',
+      onclick: function () {
+        if (ta.value && !confirm('要把右栏代码全部清空吗？（草稿也会一起清掉）')) { return; }
+        ta.value = ''; OJ.dropDraft(currentPid); updateLineInfo();
+        draftInfo.textContent = '草稿已清空';
+        ta.focus();
+      } });
+    var btnSkel = el('button', { class: 'btn ghost', type: 'button', text: '载入示例代码骨架',
+      onclick: function () {
+        if (ta.value.trim() && !confirm('右栏已经有代码，要用骨架替换掉吗？')) { return; }
+        ta.value = OJ.pySkeleton(p);
+        updateLineInfo(); scheduleSave(); ta.focus();
+      } });
+
+    return el('section', { class: 'card side' }, [
+      el('h3', { class: 'card-title' }, [document.createTextNode('我的代码'),
+        el('span', { class: 'sub', text: 'Python 3 · 从标准输入读，往标准输出写' })]),
+      el('div', { class: 'editor-wrap' }, [
+        el('div', { class: 'editor-head' }, [
+          el('span', { class: 'dot' }), el('span', { class: 'lang', text: 'submission.py' }),
+          el('span', { class: 'grow' }), el('span', { class: 'nowrap', text: 'Ctrl+Enter 提交' })
+        ]),
+        ta
+      ]),
+      el('div', { class: 'editor-foot' }, [lineInfo, draftInfo]),
+      el('div', { class: 'btn-row' }, [btnSubmit, btnSkel, btnClear]),
+      el('p', { class: 'muted small', text: '快捷操作：Tab 缩进 4 个空格（选中多行一起缩进），Shift+Tab 反向，Ctrl+Enter 提交。' })
+    ]);
+  }
+
+  function answerCard(p) {
+    ansInput = el('input', { type: 'text', id: 'answer', autocomplete: 'off',
+      placeholder: '只填最终结果，不要带单位或空格' });
+    ansInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submitAnswer(); }
+      else if (e.key === 'Enter') { e.preventDefault(); submitAnswer(); }
+    });
+    var btn = el('button', { class: 'btn big', type: 'button', id: 'btnSubmit', text: '提交答案',
+      onclick: submitAnswer });
+    var clr = el('button', { class: 'btn ghost', type: 'button', text: '清空',
+      onclick: function () { ansInput.value = ''; OJ.dropDraft(currentPid); ansInput.focus(); } });
+    ansInput.value = OJ.loadDraft(currentPid);
+    ansInput.addEventListener('input', function () { OJ.saveDraft(currentPid, ansInput.value); });
+
+    var card = el('section', { class: 'card side answer-area' }, [
+      el('h3', { class: 'card-title' }, [document.createTextNode('填写答案'),
+        el('span', { class: 'sub', text: '填空题只判结果，写对就行' })]),
+      el('p', { class: 'muted small', text: '拿不准就用几行 Python 枚举一遍，别硬算。算完把结果填到这里。' }),
+      ansInput,
+      el('div', { class: 'btn-row' }, [btn, clr]),
+      el('div', { id: 'answerHint' }),
+      el('p', { class: 'muted small', text: '这里输入的内容也会自动保存在本机，换题不会串。' })
+    ]);
+    if (best.tries) {
+      card.appendChild(el('p', { class: 'muted small', text: '本题已经提交 ' + best.tries + ' 次。' }));
+    }
+    return card;
+  }
+
+  /* ---------------- 判题结果 ---------------- */
+
+  function caseRow(c, idx) {
+    var hidden = !!c.hidden;
+    var src = (prob && prob.tests && prob.tests[idx]) || {};
+    function cell(text) {
+      var td = el('td', { class: 'mono small' });
+      var t = String(text === undefined || text === null ? '' : text).replace(/\r\n?/g, '\n');
+      if (hidden) { td.className = 'muted small'; td.textContent = '隐藏'; }
+      else if (!t.trim()) { td.textContent = '（空）'; }
+      else { td.textContent = t.length > 600 ? t.slice(0, 600) + '…' : t; td.style.whiteSpace = 'pre-wrap'; }
+      return td;
+    }
+    var input = (c.input !== undefined && c.input !== null) ? c.input : src.input;
+    var expected = (c.expected !== undefined && c.expected !== null && c.expected !== '') ? c.expected : src.expected;
+    return el('tr', {}, [
+      el('td', {}, [el('span', { class: 'case-dot ' + OJ.dotClass(c.status, hidden) }),
+        el('span', { text: c.name || '测试点' })]),
+      el('td', { class: 'nowrap' }, [OJ.statusNode(c.status, null)]),
+      el('td', { class: 'num nowrap', text: OJ.fmtMs(c.ms) }),
+      cell(input), cell(expected), cell(c.got)
+    ]);
+  }
+
+  function caseTable(cases) {
+    var vis = cases.filter(function (c) { return !c.hidden; });
+    var body = el('tbody');
+    cases.forEach(function (c, i) { body.appendChild(caseRow(c, i)); });
+    var t = el('table', { class: 'grid' }, [
+      el('thead', {}, [el('tr', {}, [
+        el('th', { text: '测试点' }), el('th', { text: '状态' }), el('th', { class: 'num', text: '用时' }),
+        el('th', { text: '输入' }), el('th', { text: '期望输出' }), el('th', { text: '你的输出' })
+      ])]),
+      body
+    ]);
+    var host = el('div', { class: 'table-scroll' }, [t]);
+    if (vis.length === 0 && cases.length) {
+      host.appendChild(el('p', { class: 'muted small', text: '本题没有公开用例，只能看到每个测试点的状态和用时。' }));
+    } else if (cases.length) {
+      host.appendChild(el('p', { class: 'muted small', text: '隐藏用例不公布输入输出；公开用例能看到你的实际输出，对着差异改最快。' }));
+    }
+    return host;
+  }
+
+  function errorBox(errData, cases) {
+    var info = errData || null;
+    if (!info && cases && cases.length) {
+      for (var i = 0; i < cases.length; i++) {
+        var c = cases[i];
+        if (c.detail && c.status !== 'AC' && c.status !== 'WA') {
+          info = { status: c.status, detail: c.detail, line: 0, excerpt: c.name ? ('测试点：' + c.name) : '' };
+          break;
+        }
+      }
+    }
+    if (!info || !info.detail) { return null; }
+    var box = el('div', { class: 'err-box' }, [
+      el('h5', { text: OJ.resultLabel(info.status || '') + '　' + (info.status || '') })
+    ]);
+    if (info.line) {
+      box.appendChild(el('p', { class: 'small', text: '出错位置：第 ' + info.line + ' 行' }));
+    } else {
+      var lines = String(info.detail).split('\n');
+      var ln = 0;
+      lines.forEach(function (s) {
+        var m = /submission\.py", line (\d+)/.exec(s) || /line (\d+)/.exec(s);
+        if (m) { ln = Number(m[1]); }
+      });
+      if (ln) { box.appendChild(el('p', { class: 'small', text: '出错位置：你提交的代码第 ' + ln + ' 行（报错信息里的行号）' })); }
+    }
+    var pre = el('pre');
+    pre.textContent = String(info.detail).slice(0, 4000);
+    box.appendChild(pre);
+    if (info.excerpt) {
+      var ex = el('p', { class: 'small mono' });
+      ex.textContent = String(info.excerpt).slice(0, 500);
+      box.appendChild(ex);
+    }
+    box.appendChild(el('p', { class: 'small', text: '先看最后一行报什么错，再回到代码里找那一行。缩进、括号、变量名最常见。' }));
+    return box;
+  }
+
+  function renderVerdict(data, kind) {
+    var host = OJ.clear(verdictHost);
+    host.classList.remove('hidden');
+    var r = data.result || 'IE';
+    host.appendChild(el('h3', { class: 'card-title' }, [document.createTextNode('判题结果'),
+      el('span', { class: 'sub', text: '提交编号 #' + (data.id || '—') })]));
+
+    var full = (data.full_score === undefined || data.full_score === null)
+      ? (prob.score || 0) : data.full_score;
+    var facts = el('div', { class: 'v-facts' }, [
+      el('span', {}, [document.createTextNode('通过 '), el('b', { text: (data.passed || 0) + '/' + (data.total || 0) })]),
+      el('span', {}, [document.createTextNode('得分 '), el('b', { text: OJ.fmtScore(data.score || 0) + ' / ' + OJ.fmtScore(full) })])
+    ]);
+    if (kind === 'code') {
+      facts.appendChild(el('span', {}, [document.createTextNode('最慢测试点 '), el('b', { text: OJ.fmtMs(data.max_ms) })]));
+      facts.appendChild(el('span', {}, [document.createTextNode('判题总耗时 '), el('b', { text: OJ.fmtMs(data.wall_ms) })]));
+    }
+    host.appendChild(el('div', { class: 'verdict-head' }, [
+      el('div', { class: 'verdict ' + OJ.verdictClass(r) }, [
+        document.createTextNode(r), el('span', { class: 'zh', text: OJ.resultLabel(r, data.labels) })
+      ]),
+      facts
+    ]));
+
+    if (kind === 'code') {
+      if (data.cases && data.cases.length) { host.appendChild(el('div', { class: 'sec' }, [caseTable(data.cases)])); }
+      var eb = errorBox(data.error, data.cases);
+      if (eb) { host.appendChild(eb); }
+    } else {
+      if (data.ok) {
+        host.appendChild(el('div', { class: 'notice', text: '答案正确，本题得分 ' + OJ.fmtScore(data.score) + ' 分。' }));
+      } else {
+        var hint = el('div', { class: 'hint-box' }, [
+          el('b', { text: '答案不对。' }),
+          el('p', { text: data.detail || '再检查一遍数值。' })
+        ]);
+        host.appendChild(hint);
+      }
+    }
+    if (r === 'AC') {
+      host.appendChild(el('p', { class: 'small' }, [
+        document.createTextNode('这题过了。'), el('a', { href: 'problems', text: '回题库' }),
+        document.createTextNode('挑下一道。')
+      ]));
+    }
+    host.scrollIntoView({ block: 'nearest' });
+  }
+
+  function verdictFail(err) {
+    var host = OJ.clear(verdictHost);
+    host.classList.remove('hidden');
+    host.appendChild(el('h3', { class: 'card-title', text: '判题结果' }));
+    host.appendChild(OJ.failBox(err));
+  }
+
+  /* ---------------- 提交 ---------------- */
+
+  function busy(on) {
+    var b = document.getElementById('btnSubmit');
+    if (!b) { return; }
+    b.disabled = !!on;
+    if (on) { b.dataset.old = b.textContent; b.textContent = '判题中…'; }
+    else if (b.dataset.old) { b.textContent = b.dataset.old; }
+  }
+
+  function submitCode() {
+    if (!prob || prob.type !== 'prog') { return; }
+    var code = ta.value;
+    if (!code.trim()) { alert('代码还是空的，先写几行再提交。'); ta.focus(); return; }
+    OJ.saveDraft(currentPid, code);
+    busy(true);
+    OJ.api.post('submit', { problem_id: currentPid, code: code, contest_id: CID || undefined })
+      .then(function (res) { busy(false); renderVerdict(res, 'code'); loadHistory(); },
+        function (err) { busy(false); verdictFail(err); });
+  }
+
+  function submitAnswer() {
+    if (!prob || prob.type !== 'fill') { return; }
+    var a = (ansInput.value || '').trim();
+    if (!a) { alert('先把答案填进去。'); ansInput.focus(); return; }
+    OJ.saveDraft(currentPid, ansInput.value);
+    busy(true);
+    OJ.api.post('answer', { problem_id: currentPid, answer: a, contest_id: CID || undefined })
+      .then(function (res) {
+        busy(false);
+        renderVerdict(res, 'answer');
+        var host = document.getElementById('answerHint');
+        OJ.clear(host);
+        if (!res.ok) {
+          host.appendChild(el('div', { class: 'hint-box' }, [
+            el('b', { text: '提示：' }), el('span', { text: res.detail || '再想想。' })
+          ]));
+        } else {
+          host.appendChild(el('div', { class: 'notice', text: '已经答对了。' }));
+        }
+        loadHistory();
+      }, function (err) { busy(false); verdictFail(err); });
+  }
+
+  /* ---------------- 提交历史 ---------------- */
+
+  function historyCard() {
+    var card = el('section', { class: 'card' }, [
+      el('h3', { class: 'card-title' }, [document.createTextNode('我的提交历史'),
+        el('span', { class: 'sub', text: '最多显示最近 20 条' })]),
+      el('div', { id: 'historyBody' })
+    ]);
+    return card;
+  }
+
+  function loadHistory() {
+    OJ.api.get('submissions', { problem: currentPid, limit: 20 }).then(function (res) {
+      drawHistory((res && res.items) || []);
+    }, function () { drawHistory(history || []); });
+  }
+
+  function drawHistory(list) {
+    var host = document.getElementById('historyBody');
+    if (!host) { return; }
+    OJ.clear(host);
+    if (!list.length) {
+      host.appendChild(el('div', { class: 'empty', text: '还没有提交记录。写完代码按 Ctrl+Enter 交一次看看。' }));
+      return;
+    }
+    var body = el('tbody');
+    list.forEach(function (s) {
+      var kind = s.kind === 'answer' ? '答案' : '代码';
+      var detail = el('tr', { class: 'sub-row hidden' }, [el('td', { colspan: '7' })]);
+      var pre = el('pre', { class: 'code-view' });
+      pre.textContent = s.kind === 'answer' ? String(s.answer || '') : String(s.code || '');
+      detail.firstChild.appendChild(pre);
+      if (s.detail) {
+        detail.firstChild.appendChild(el('div', { class: 'muted small', text: '服务端记录：' }));
+        var d = el('pre', { class: 'code-view' });
+        d.textContent = String(s.detail);
+        detail.firstChild.appendChild(d);
+      }
+      body.appendChild(el('tr', {}, [
+        el('td', { class: 'mono nowrap', text: '#' + s.id }),
+        el('td', { class: 'nowrap', text: OJ.fmtTime(s.created_at) }),
+        el('td', { class: 'nowrap', text: kind }),
+        el('td', { class: 'nowrap' }, [OJ.statusNode(s.result, null)]),
+        el('td', { class: 'num nowrap', text: OJ.fmtScore(s.score) + ' / ' + OJ.fmtScore(s.full_score) }),
+        el('td', { class: 'num nowrap', text: s.kind === 'answer' ? '—' : OJ.fmtMs(s.ms) }),
+        el('td', { class: 'nowrap' }, [
+          el('button', { class: 'btn small ghost', type: 'button', text: '展开',
+            onclick: function (e) {
+              e.stopPropagation();
+              detail.classList.toggle('hidden');
+              this.textContent = detail.classList.contains('hidden') ? '展开' : '收起';
+            } }),
+          s.kind === 'answer'
+            ? el('button', { class: 'btn small ghost', type: 'button', text: '填回答题区', onclick: function () {
+                ansInput.value = s.answer || ''; ansInput.focus();
+              } })
+            : el('button', { class: 'btn small ghost', type: 'button', text: '载入编辑器', onclick: function () {
+                ta.value = s.code || ''; updateLineInfo(); scheduleSave(); ta.focus();
+              } })
+        ])
+      ]));
+      body.appendChild(detail);
+    });
+    host.appendChild(el('div', { class: 'table-scroll' }, [el('table', { class: 'grid' }, [
+      el('thead', {}, [el('tr', {}, [
+        el('th', { text: '编号' }), el('th', { text: '时间' }), el('th', { text: '方式' }),
+        el('th', { text: '结果' }), el('th', { class: 'num', text: '得分' }),
+        el('th', { class: 'num', text: '用时' }), el('th', { text: '操作' })
+      ])]),
+      body
+    ])]));
+  }
+
+  /* ---------------- 题解 ---------------- */
+
+  function solutionCard() {
+    var card = el('section', { class: 'card' }, [
+      el('h3', { class: 'card-title' }, [document.createTextNode('题解与讲义'),
+        el('span', { class: 'sub', text: unlocked ? '你之前已经看过本题题解' : '看完会被记录，建议先自己憋 20 分钟' })]),
+      el('div', { class: 'sol-actions' })
+    ]);
+    solBody = el('div', { class: 'hidden' });
+    var actions = card.querySelector('.sol-actions');
+    var btn = el('button', { class: 'btn', type: 'button', text: '展开题解' });
+    btn.addEventListener('click', function () {
+      if (solBody.classList.contains('hidden')) {
+        if (!solFetched && !unlocked && !confirm('题解一打开就会被记录为「已看题解」。确定现在要看吗？')) { return; }
+        btn.disabled = true;
+        btn.textContent = '正在读取…';
+        OJ.api.get('solution', { id: currentPid }).then(function (s) {
+          solFetched = true; unlocked = true;
+          btn.disabled = false;
+          btn.textContent = '收起题解';
+          drawSolution(s || {});
+          solBody.classList.remove('hidden');
+        }, function (err) {
+          btn.disabled = false;
+          btn.textContent = '展开题解';
+          OJ.clear(solBody).appendChild(OJ.failBox(err));
+          solBody.classList.remove('hidden');
+        });
+      } else {
+        solBody.classList.add('hidden');
+        btn.textContent = '展开题解';
+      }
+    });
+    actions.appendChild(btn);
+    actions.appendChild(el('span', { class: 'muted small', text: '题解里有思路、跑过的参考代码和实际输出，还有对应讲义章节。' }));
+    card.appendChild(solBody);
+    return card;
+  }
+
+  function drawSolution(s) {
+    var host = OJ.clear(solBody);
+    if (s.idea) {
+      var idea = el('div', { class: 'stmt-body' });
+      idea.innerHTML = String(s.idea);
+      host.appendChild(el('div', { class: 'sol-sec' }, [el('h5', { text: '解题思路' }), idea]));
+    }
+    if (s.answer) {
+      host.appendChild(el('div', { class: 'sol-sec' }, [el('h5', { text: '参考答案' }),
+        (function () {
+          var box = el('div', { class: 'io-box' });
+          var b = el('button', { class: 'copy-btn', type: 'button', text: '复制',
+            onclick: function () { OJ.copyText(String(s.answer), b); } });
+          box.appendChild(el('div', { class: 'io-head' }, [el('span', { text: '填空结果' }), b]));
+          var pre = el('pre');
+          pre.textContent = String(s.answer);
+          box.appendChild(pre);
+          return box;
+        })()]));
+    }
+    if (s.code) {
+      var wrap = el('div', { class: 'io-box' });
+      var cp = el('button', { class: 'copy-btn', type: 'button', text: '复制',
+        onclick: function () { OJ.copyText(String(s.code), cp); } });
+      var ld = el('button', { class: 'copy-btn', type: 'button', text: '载入编辑器', onclick: function () {
+        if (!ta) { alert('本题是填空题，代码可以自己另存一份再练。'); return; }
+        if (ta.value.trim() && !confirm('右栏已有代码，要用题解代码替换吗？')) { return; }
+        ta.value = String(s.code); updateLineInfo(); scheduleSave();
+      } });
+      wrap.appendChild(el('div', { class: 'io-head' }, [el('span', { text: '参考代码（本机跑通过的写法）' }),
+        el('span', { class: 'row' }, [cp, ld])]));
+      var pre = el('pre', { style: 'white-space:pre; overflow:auto' });
+      pre.textContent = String(s.code);
+      wrap.appendChild(pre);
+      host.appendChild(el('div', { class: 'sol-sec' }, [el('h5', { text: '参考代码' }), wrap]));
+    }
+    if (s.output) {
+      var ob = el('div', { class: 'io-box' });
+      var ocb = el('button', { class: 'copy-btn', type: 'button', text: '复制',
+        onclick: function () { OJ.copyText(String(s.output), ocb); } });
+      ob.appendChild(el('div', { class: 'io-head' }, [el('span', { text: '参考代码的实际输出' }), ocb]));
+      var op = el('pre');
+      op.textContent = String(s.output);
+      ob.appendChild(op);
+      host.appendChild(el('div', { class: 'sol-sec' }, [el('h5', { text: '实测输出' }), ob]));
+    }
+    var links = [];
+    if (s.chapter) { links.push(el('p', {}, [document.createTextNode('对应讲义章节：'), el('span', { class: 'file-path', text: String(s.chapter) })])); }
+    if (s.reference) { links.push(el('p', {}, [document.createTextNode('参考脚本路径：'), el('span', { class: 'file-path', text: String(s.reference) })])); }
+    if (links.length) {
+      host.appendChild(el('div', { class: 'sol-sec' }, [el('h5', { text: '配套材料' })].concat(links)));
+    }
+    if (!s.idea && !s.code && !s.answer) {
+      host.appendChild(el('div', { class: 'empty', text: '这道题还没有配题解。' }));
+    }
+  }
+
+  /* ---------------- 组装页面 ---------------- */
+
+  function renderPage(data) {
+    prob = data.problem || {};
+    best = data.best || {};
+    history = data.history || [];
+    unlocked = !!data.solution_unlocked;
+    STARRED = !!data.starred;
+    currentPid = prob.id || PID;
+
+    document.title = (prob.title || '题目') + ' · 蓝桥杯 Python 模拟训练平台';
+    document.getElementById('crumbName').textContent = prob.title || prob.id;
+    OJ.api.get('stats').then(function (s) { OJ.setNavStat(s.solved, s.problems); }, function () { });
+
+    var noticeHost = OJ.clear(document.getElementById('noticeHost'));
+    if (CID) {
+      noticeHost.appendChild(OJ.notice('正在参加模拟赛 #' + CID + '，这段时间内的提交都会计入成绩。'));
+      noticeHost.firstChild.appendChild(el('a', { class: 'btn small ghost', href: 'contest', text: '回考场' }));
+    }
+
+    var app = OJ.clear(document.getElementById('app'));
+    navHosts = [];
+    app.appendChild(navSlot());
+    var split = el('div', { class: 'split' }, [statementCard(prob)]);
+    split.appendChild(prob.type === 'fill' ? answerCard(prob) : codeCard(prob));
+    app.appendChild(split);
+
+    verdictHost = el('section', { class: 'card hidden' });
+    app.appendChild(verdictHost);
+
+    if (best.last_at) {
+      var again = el('div', { class: 'notice' }, [document.createTextNode(
+        '最近一次提交：' + OJ.fmtTime(best.last_at) + '，最好成绩 ' + OJ.fmtScore(best.score) + '/' +
+        OJ.fmtScore(best.full || prob.score) + ' 分，共尝试 ' + (best.tries || 0) + ' 次。')]);
+      app.insertBefore(again, verdictHost);
+    }
+
+    app.appendChild(historyCard());
+    app.appendChild(solutionCard());
+    app.appendChild(navSlot());
+    fillNavs(prob.id);
+    initDrawer(prob.id);
+    drawHistory(history);
+    if (prob.type === 'prog') { updateLineInfo(); }
+    if (ta && !ta.value) { ta.focus(); }
+  }
+
+  /* ---------------- 收藏 ---------------- */
+  var ORDER = [];
+  var navHosts = [];
+  var STARRED = false;
+
+  function starBtn() {
+    var b = el('button', {
+      class: 'star' + (STARRED ? ' on' : ''), type: 'button',
+      text: STARRED ? '★ 已收藏' : '☆ 收藏这题',
+      title: '收藏后可以在题库页用「只看收藏」筛出来，反复练'
+    });
+    b.addEventListener('click', function () {
+      b.disabled = true;
+      OJ.api.post('star', { problem_id: currentPid, on: !STARRED }).then(function (r) {
+        STARRED = !!r.starred;
+        b.disabled = false;
+        b.className = 'star' + (STARRED ? ' on' : '');
+        b.textContent = STARRED ? '★ 已收藏' : '☆ 收藏这题';
+      }, function (err) {
+        b.disabled = false;
+        b.textContent = '收藏失败，点这里重试';
+        b.title = (err && err.message) || '服务没有响应';
+      });
+    });
+    return b;
+  }
+
+  function neighborIds(pid) {
+    var idx = -1;
+    for (var i = 0; i < ORDER.length; i++) { if (ORDER[i].id === pid) { idx = i; break; } }
+    return {
+      idx: idx,
+      total: ORDER.length,
+      prev: idx > 0 ? ORDER[idx - 1] : null,
+      next: (idx >= 0 && idx < ORDER.length - 1) ? ORDER[idx + 1] : null
+    };
+  }
+
+  function navLink(item, dir) {
+    if (!item) {
+      return el('span', { class: 'pnav-blank', text: dir === 'prev' ? '‹ 已经是第一题' : '已经是最后一题 ›' });
+    }
+    var no = item.order || Number((/^p0*(\d+)/i.exec(item.id || '') || [])[1]) || 0;
+    var st = item.solved ? '已解' : (item.tries ? '尝试 ' + item.tries + ' 次' : '未做');
+    return el('a', {
+      class: 'pnav-link ' + dir + (item.solved ? ' done' : ''),
+      href: OJ.linkProblem(item.id, CID || undefined),
+      title: '第 ' + no + ' 题 · ' + (item.difficulty || '') + ' · ' + st
+    }, [
+      el('span', { class: 'pnav-dir', text: dir === 'prev' ? '‹ 上一题' : '下一题 ›' }),
+      el('span', { class: 'pnav-name', text: no + '. ' + item.title }),
+      el('span', { class: 'pnav-state', text: st })
+    ]);
+  }
+
+  function navInner(pid) {
+    var n = neighborIds(pid);
+    var mid = el('span', { class: 'pnav-mid' }, [
+      el('button', {
+        class: 'btn small', type: 'button', text: '☰ 题单',
+        title: '不离开本页，直接挑题（Ctrl + B）',
+        onclick: function () { setDrawer(true); }
+      }),
+      el('a', { class: 'btn small ghost', href: 'problems', text: '回到题库' })
+    ]);
+    if (n.idx >= 0) { mid.appendChild(el('span', { class: 'muted small', text: '按编号第 ' + (n.idx + 1) + ' / ' + n.total + ' 题' })); }
+    return el('div', { class: 'pnav-row' }, [navLink(n.prev, 'prev'), mid, navLink(n.next, 'next')]);
+  }
+
+  function navSlot() {
+    var host = el('section', { class: 'card pnav' }, [el('div', { class: 'muted small', text: '正在读取题序…' })]);
+    navHosts.push(host);
+    return host;
+  }
+
+  function fillNavs(pid) {
+    function paint() {
+      navHosts.forEach(function (h) { OJ.clear(h).appendChild(navInner(pid)); });
+    }
+    if (ORDER.length) { paint(); return; }
+    OJ.api.get('problems').then(function (d) {
+      ORDER = (d && d.items) || [];
+      paint();
+    }, function () {
+      navHosts.forEach(function (h) { h.classList.add('hidden'); });
+    });
+  }
+
+  /* ---------------- 题单抽屉：在做题页直接看题库、跳题 ---------------- */
+  var DRAW = { built: false, open: false, list: [], filter: 'all', q: '' };
+  var DRAW_KEY = 'lanqiao-oj-drawer-open';
+  var dHost = null, dMask = null, dPanel = null, dTabs = null, dList = null, dCount = null, dSearch = null;
+
+  function pno(item) {
+    return item.order || Number((/^p0*(\d+)/i.exec(item.id || '') || [])[1]) || 0;
+  }
+
+  function drawFiltered() {
+    var q = DRAW.q.toLowerCase();
+    return DRAW.list.filter(function (p) {
+      if (DRAW.filter === 'todo' && p.solved) { return false; }
+      if (DRAW.filter === 'done' && !p.solved) { return false; }
+      if (DRAW.filter === 'star' && !p.starred) { return false; }
+      if (q) {
+        var hay = (p.id + ' ' + p.title + ' ' + (p.tags || []).join(' ') + ' ' + (p.chapter || '')).toLowerCase();
+        if (hay.indexOf(q) < 0) { return false; }
+      }
+      return true;
+    });
+  }
+
+  function paintTabs() {
+    OJ.clear(dTabs);
+    [['all', '全部'], ['todo', '未做'], ['star', '收藏'], ['done', '已解']].forEach(function (t) {
+      var n = t[0] === 'all' ? DRAW.list.length
+        : t[0] === 'todo' ? DRAW.list.filter(function (p) { return !p.solved; }).length
+        : t[0] === 'star' ? DRAW.list.filter(function (p) { return p.starred; }).length
+        : DRAW.list.filter(function (p) { return p.solved; }).length;
+      dTabs.appendChild(el('button', {
+        class: 'd-tab' + (DRAW.filter === t[0] ? ' on' : ''), type: 'button',
+        text: t[1] + ' ' + n,
+        onclick: function () { DRAW.filter = t[0]; paintTabs(); paintList(); }
+      }));
+    });
+  }
+
+  function paintList() {
+    var rows = drawFiltered();
+    OJ.clear(dList);
+    rows.forEach(function (p) {
+      var st = p.solved ? '已解' : (p.tries ? '尝试 ' + p.tries + ' 次' : '未做');
+      dList.appendChild(el('a', {
+        class: 'd-item' + (p.id === PID ? ' cur' : '') + (p.solved ? ' done' : ''),
+        href: OJ.linkProblem(p.id, CID || undefined),
+        title: p.id + ' · ' + st
+      }, [
+        el('span', { class: 'd-no', text: pno(p) }),
+        el('span', { class: 'd-main' }, [
+          el('span', { class: 'd-title', text: p.title }),
+          el('span', { class: 'd-meta', text:
+            (p.difficulty || '未标注') + ' · ' + OJ.fmtScore(p.score) + ' 分 · ' + st +
+            (p.type === 'fill' ? ' · 填空' : '') })
+        ]),
+        el('span', { class: 'd-star', text: p.starred ? '★' : '' })
+      ]));
+    });
+    if (!rows.length) {
+      dList.appendChild(el('p', { class: 'muted small', text: '这个条件下没有题目。' }));
+    }
+    dCount.textContent = '显示 ' + rows.length + ' / ' + DRAW.list.length + ' 题';
+    var cur = dList.querySelector('.d-item.cur');
+    if (cur && cur.scrollIntoView) { cur.scrollIntoView({ block: 'center' }); }
+  }
+
+  function buildDrawer() {
+    if (DRAW.built) { return; }
+    dMask = el('div', { class: 'drawer-mask', onclick: function () { setDrawer(false); } });
+    dTabs = el('div', { class: 'd-tabs' });
+    dList = el('div', { class: 'd-list' });
+    dCount = el('span', { class: 'muted small' });
+    dSearch = el('input', { type: 'search', class: 'd-search', placeholder: '搜标题 / 编号 / 考点' });
+    dSearch.addEventListener('input', function () { DRAW.q = dSearch.value; paintList(); });
+    dPanel = el('aside', { class: 'drawer', 'aria-label': '题库题单' }, [
+      el('div', { class: 'd-head' }, [
+        el('strong', { text: '题库题单' }),
+        el('button', { class: 'd-close', type: 'button', text: '✕', title: '关闭（Esc）',
+          onclick: function () { setDrawer(false); } })
+      ]),
+      dSearch, dTabs,
+      el('div', { class: 'd-sub' }, [dCount,
+        el('span', { class: 'muted small', text: '点任意一题直接跳转' })]),
+      dList
+    ]);
+    document.body.appendChild(dMask);
+    document.body.appendChild(dPanel);
+    DRAW.built = true;
+  }
+
+  function setDrawer(open) {
+    buildDrawer();
+    DRAW.open = !!open;
+    dPanel.classList.toggle('open', DRAW.open);
+    dMask.classList.toggle('open', DRAW.open);
+    if (DRAW.open) {
+      paintTabs(); paintList();
+      if (dSearch && dSearch.focus) { try { dSearch.focus(); } catch (e) { } }
+    }
+    try { localStorage.setItem(DRAW_KEY, DRAW.open ? '1' : '0'); } catch (e) { }
+  }
+
+  function initDrawer(pid) {
+    if (!document.getElementById('dFab')) {
+      var fab = el('button', {
+        class: 'btn d-fab', type: 'button', id: 'dFab', text: '☰ 题单',
+        title: '展开题库题单，直接挑题做（Ctrl + B）',
+        onclick: function () { setDrawer(!DRAW.open); }
+      });
+      document.body.appendChild(fab);
+      document.addEventListener('keydown', function (ev) {
+        if (ev.ctrlKey && (ev.key === 'b' || ev.key === 'B')) { ev.preventDefault(); setDrawer(!DRAW.open); }
+        if (ev.key === 'Escape' && DRAW.open) { setDrawer(false); }
+      });
+    }
+    OJ.api.get('problems').then(function (d) {
+      DRAW.list = (d && d.items) || [];
+      var open = false;
+      try { open = localStorage.getItem(DRAW_KEY) === '1'; } catch (e) { }
+      if (open) { setDrawer(true); }
+    }, function () { });
+  }
+
+  function boot() {
+    OJ.clear(document.getElementById('app')).appendChild(OJ.loading('正在读取题目…'));
+    OJ.api.get('problem', { id: PID }).then(function (data) {
+      if (!data || !data.problem) { throw new Error('题目数据是空的'); }
+      renderPage(data);
+    }, function (err) {
+      var app = OJ.clear(document.getElementById('app'));
+      app.appendChild(OJ.failBox(err));
+      if (err.status === 404) {
+        app.appendChild(el('p', {}, [document.createTextNode('这个题目编号在本机题库里找不到。'),
+          el('a', { href: 'problems', text: '去题库看有哪些题' })]));
+      } else {
+        app.appendChild(el('p', {}, [el('button', { class: 'btn ghost', type: 'button', text: '重新读取', onclick: boot })]));
+      }
+    });
+  }
+
+  window.addEventListener('beforeunload', function () {
+    if (ta) { OJ.saveDraft(currentPid, ta.value); }
+    else if (ansInput) { OJ.saveDraft(currentPid, ansInput.value); }
+  });
+
+  boot();
+})();
+</script>
+</body>
+</html>

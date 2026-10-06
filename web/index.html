@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231c4f9c'/%3E%3Crect x='6' y='7' width='20' height='4' rx='2' fill='%23ffffff'/%3E%3Crect x='6' y='15' width='14' height='3' rx='1.5' fill='%23a9c8ee'/%3E%3Crect x='6' y='22' width='17' height='3' rx='1.5' fill='%23a9c8ee'/%3E%3C/svg%3E">
+<title>首页 · 蓝桥杯 Python 模拟训练平台</title>
+<link rel="stylesheet" href="assets/oj.css">
+</head>
+<body data-page="index">
+<header id="topbar"></header>
+
+<main class="wrap">
+  <h2 class="page-title">训练总览</h2>
+  <div id="app"><div class="card loading"><span class="spin"></span>正在读取本机数据…</div></div>
+</main>
+
+<footer id="foot"></footer>
+
+<script src="assets/oj.js"></script>
+<script>
+(function () {
+  'use strict';
+  var el = OJ.el;
+
+  OJ.initChrome('index');
+
+  function statCard(k, v, unit, cls) {
+    var val = el('div', { class: 'v' }, [document.createTextNode(String(v))]);
+    if (unit) { val.appendChild(el('small', { text: unit })); }
+    return el('div', { class: 'stat ' + (cls || '') }, [el('div', { class: 'k', text: k }), val]);
+  }
+
+  function statGrid(stats) {
+    return el('div', { class: 'stat-grid' }, [
+      statCard('题库总数', stats.problems || 0, ' 题', ''),
+      statCard('已解', stats.solved || 0, ' 题', 's2'),
+      statCard('提交数', stats.submissions || 0, ' 次', 's3'),
+      statCard('AC 率', (stats.ac_rate === undefined ? 0 : stats.ac_rate), ' %', 's4')
+    ]);
+  }
+
+  /* 薄弱考点：完成率越低越靠前 */
+  function weakCard(stats) {
+    var tags = (stats.tags || []).slice().sort(function (a, b) {
+      return (a.rate - b.rate) || (b.total - a.total) || String(a.tag).localeCompare(String(b.tag));
+    });
+    var card = el('section', { class: 'card' }, [
+      el('h3', { class: 'card-title' }, [
+        document.createTextNode('薄弱考点排行'),
+        el('span', { class: 'sub', text: '按考点完成率从低到高排，先补前面这些' })
+      ])
+    ]);
+    if (!tags.length) {
+      card.appendChild(el('div', { class: 'empty', text: '题库还没有打考点标签。' }));
+      return card;
+    }
+    var list = el('div', { class: 'bars' });
+    tags.slice(0, 8).forEach(function (t) {
+      var rate = Math.max(0, Math.min(100, Number(t.rate) || 0));
+      var lvl = rate >= 80 ? 'ok' : (rate >= 40 ? 'mid' : 'low');
+      list.appendChild(el('div', { class: 'bar-row' }, [
+        el('div', { class: 'bar-name' }, [
+          el('a', { href: OJ.linkProblems({ tag: t.tag }), text: t.tag })
+        ]),
+        el('div', { class: 'track' }, [el('div', { class: 'fill ' + lvl, style: 'width:' + rate + '%' })]),
+        el('div', { class: 'bar-num' }, [
+          document.createTextNode('已解 ' + t.solved + '/' + t.total + ' · 尝试 ' + (t.tries || 0) + ' 次 · ')
+        , el('b', { text: rate + '%' })])
+      ]));
+    });
+    card.appendChild(list);
+    if (tags.length > 8) {
+      card.appendChild(el('p', { class: 'muted small', text: '只列出最薄弱的 8 个考点，完整列表在题库页的考点下拉里。' }));
+    }
+    return card;
+  }
+
+  /* 继续刷题：还没做出的题 */
+  function todoCard(items) {
+    var undone = items.filter(function (p) { return !p.solved; });
+    var card = el('section', { class: 'card' }, [
+      el('h3', { class: 'card-title' }, [
+        document.createTextNode('继续刷题'),
+        el('span', { class: 'sub', text: undone.length ? '还有 ' + undone.length + ' 道题没做出，按编号顺序往下刷' : '全部题目都已通过' })
+      ])
+    ]);
+    if (!items.length) {
+      card.appendChild(el('div', { class: 'empty', text: '题库是空的：先在项目根目录运行  python generator/build_problems.py' }));
+      return card;
+    }
+    if (!undone.length) {
+      card.appendChild(el('div', { class: 'notice', text: '恭喜，题库里的题全解出来了。去模拟赛掐表检验一遍。' }, []));
+      card.appendChild(el('p', {}, [el('a', { class: 'btn', href: 'contest', text: '去参加模拟赛' })]));
+      return card;
+    }
+    var list = el('div', { class: 'quick-list' });
+    undone.slice(0, 10).forEach(function (p) {
+      var tried = !p.solved && p.tries > 0;
+      list.appendChild(el('div', { class: 'quick-item' }, [
+        el('span', { class: 'badge ' + (p.type === 'fill' ? 'b-fill' : 'b-prog'), text: OJ.typeLabel(p.type) }),
+        el('span', { class: 'badge ' + OJ.diffClass(p.difficulty), text: p.difficulty || '未标注' }),
+        el('span', { class: 't' }, [el('a', { href: OJ.linkProblem(p.id), text: p.title })]),
+        el('span', { class: 'muted small nowrap', text: p.score + ' 分' }),
+        el('span', { class: 'st ' + (tried ? 'tried' : 'todo'), text: tried ? ('试过 ' + p.tries + ' 次') : '未做' }),
+        el('a', { class: 'btn small', href: OJ.linkProblem(p.id), text: tried ? '接着做' : '去做' })
+      ]));
+    });
+    card.appendChild(list);
+    card.appendChild(el('p', { class: 'small muted' }, [
+      document.createTextNode('只想看列表？'),
+      el('a', { href: 'problems', text: '打开完整题库' })
+    ]));
+    return card;
+  }
+
+  function guideCard() {
+    var card = el('section', { class: 'card' }, [
+      el('h3', { class: 'card-title', text: '怎么用这个平台' })
+    ]);
+    card.appendChild(el('ol', { class: 'steps' }, [
+      el('li', {}, [el('b', { text: '启动服务：' }), el('code', { class: 'mono', text: 'python server/app.py' }),
+        document.createTextNode('，浏览器会自动打开 http://127.0.0.1:8000，关掉命令行窗口就停止。')]),
+      el('li', {}, [document.createTextNode('进 '), el('a', { href: 'problems', text: '题库' }),
+        document.createTextNode('，挑一道题。编程题在右栏写代码，填空题直接填结果。')]),
+      el('li', {}, [document.createTextNode('写完按 '), el('kbd', { text: 'Ctrl + Enter' }),
+        document.createTextNode(' 提交，本机 Python 会真跑一遍所有测试点，下面立刻出结果。')]),
+      el('li', {}, [document.createTextNode('看测试点表格找问题：可见用例能看到输入、期望、你的实际输出；隐藏用例只给状态和用时。')]),
+      el('li', {}, [document.createTextNode('草稿自动存在浏览器里，关页面、换题都不会串题；实在卡住再点开题解，点开后会被记录。')]),
+      el('li', {}, [document.createTextNode('考前到 '), el('a', { href: 'contest', text: '模拟赛' }),
+        document.createTextNode(' 掐表做一遍，交卷后能看每题得分和耗时。')])
+    ]));
+    card.appendChild(el('p', { class: 'muted small', text: '建议节奏：每天 2 道编程题 + 1 道填空题，做完把错题的考点记在手边本子上。' }));
+    return card;
+  }
+
+  function render(data) {
+    var items = data.items || [];
+    var stats = data.stats || {};
+    OJ.setNavStat(stats.solved, stats.problems);
+    var app = OJ.clear(document.getElementById('app'));
+    app.appendChild(statGrid(stats));
+    app.appendChild(weakCard(stats));
+    app.appendChild(todoCard(items));
+    app.appendChild(starCard(items));
+    app.appendChild(guideCard());
+  }
+
+  function starCard(items) {
+    var stars = items.filter(function (p) { return p.starred; });
+    var box = el('section', { class: 'card' }, [
+      el('h3', { class: 'card-title' }, [document.createTextNode('我的收藏')])
+    ]);
+    if (!stars.length) {
+      box.appendChild(el('p', { class: 'muted' }, [document.createTextNode(
+        '还没收藏任何题。做题时卡住就先点题目页的「☆ 收藏这题」，之后在题库页用「只看收藏」一次捞出来反复练。')]));
+      return box;
+    }
+    var todo = stars.filter(function (p) { return !p.solved; });
+    var list = el('ul', { class: 'star-list' });
+    stars.slice(0, 12).forEach(function (p) {
+      var no = Number((/^p0*(\d+)/i.exec(p.id || '') || [])[1]) || '';
+      list.appendChild(el('li', {}, [
+        el('a', { href: OJ.linkProblem(p.id), text: no + '. ' + p.title }),
+        el('span', { class: 'badge ' + OJ.diffClass(p.difficulty), text: p.difficulty || '未标注' }),
+        el('span', { class: p.solved ? 'st solved' : 'st todo', text: p.solved ? '已解' : '未做' })
+      ]));
+    });
+    box.appendChild(el('p', { class: 'muted small', text:
+      '共收藏 ' + stars.length + ' 道，其中 ' + todo.length + ' 道还没做出来。' +
+      (stars.length > 12 ? '（这里只列前 12 道）' : '') }));
+    box.appendChild(list);
+    box.appendChild(el('p', {}, [
+      el('a', { class: 'btn small ghost', href: 'problems?star=1', text: '在题库里只看收藏' })
+    ]));
+    return box;
+  }
+
+  function boot() {
+    OJ.api.get('problems').then(function (data) {
+      render(data || { items: [], stats: {} });
+    }, function (err) {
+      var app = OJ.clear(document.getElementById('app'));
+      app.appendChild(OJ.failBox(err));
+      app.appendChild(guideCard());
+      if (!err.offline) { app.appendChild(el('p', {}, [el('button', { class: 'btn ghost', type: 'button', text: '重试', onclick: boot })])); }
+    });
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

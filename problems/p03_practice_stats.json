@@ -1,0 +1,90 @@
+{
+  "id": "p03_practice_stats",
+  "order": 3,
+  "title": "刷题统计",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "模拟",
+    "周期跳步"
+  ],
+  "chapter": "第 13 章 04 / 第 5 章 枚举与模拟",
+  "source": "蓝桥杯省赛真题（题意整理）",
+  "statement": "<p>小蓝从周一开始刷题：周一到周五每天做 <code>a</code> 道，周六周日每天做 <code>b</code> 道。给定 <code>n</code>，问第几天累计做题数第一次达到或超过 n。</p><p>一天一天加最直观，但 n 最大到 10^15，慢慢循环一定跑不完。注意 7 天是一个循环：一整周固定做 <code>5a + 2b</code> 道，先把整周成批跳过去，剩下的再逐天补。</p>",
+  "input_format": "一行三个整数 a、b、n（1 ≤ a, b ≤ 100，1 ≤ n ≤ 10^15）。",
+  "output_format": "一行一个整数，是第几天。",
+  "examples": [
+    {
+      "input": "10 20 100",
+      "output": "8\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 a=10 b=20 n=100",
+      "input": "10 20 100\n",
+      "expected": "8\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 a b n",
+      "input": "1 1 1\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "工作日和周末一样多",
+      "input": "10 10 100\n",
+      "expected": "10\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "周末刷得多",
+      "input": "1 100 100\n",
+      "expected": "6\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "刚好一周做完",
+      "input": "10 10 70\n",
+      "expected": "7\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "差一题要跨周",
+      "input": "5 3 47\n",
+      "expected": "11\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机中等",
+      "input": "10 38 81729614\n",
+      "expected": "4540536\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大 n=1e15",
+      "input": "100 1 1000000000000000\n",
+      "expected": "13944223107568\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>先算 <code>full = n // (5a + 2b)</code>，直接跳 full 周（此时已做 <code>full * (5a+2b)</code> 道，一定还没超过 n），再用 while 一天一天补。</p><p>判断星期几用 <code>(day - 1) % 7 &lt; 5</code>。把 n 刚好等于一整周题数的情况单独跑一次，最容易看出有没有多算一天。</p>",
+    "code": "\"\"\"p03 刷题统计：从周一开始，工作日每天 a 题、周末每天 b 题，问第几天累计到 n。\n一天一天模拟在 n 很大时会超时，所以先把整周（5a+2b 题）成批跳过，再逐天补。\n\"\"\"\nimport sys\n\n\ndef day_when_reach(a, b, n):\n    week = 5 * a + 2 * b            # 一整周做的题数\n    full = n // week                # 可以整跳几周\n    day = full * 7\n    done = full * week\n    while done < n:\n        day += 1\n        done += a if (day - 1) % 7 < 5 else b   # 前 5 天是周一到周五\n    return day\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    a, b, n = int(data[0]), int(data[1]), int(data[2])\n    print(day_when_reach(a, b, n))\n\n\nmain()\n",
+    "output": "$ python p03_practice_stats.py\n输入：10 20 100\n\n输出：8\r\n",
+    "reference": "code/ch13-real-problems/04_practice_stats.py"
+  }
+}

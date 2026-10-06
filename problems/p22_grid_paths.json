@@ -1,0 +1,31 @@
+{
+  "id": "p22_grid_paths",
+  "order": 22,
+  "title": "20x20 网格路径数",
+  "type": "fill",
+  "difficulty": "提高",
+  "score": 10,
+  "tags": [
+    "动态规划",
+    "组合数"
+  ],
+  "chapter": "第 13 章 09 / 第 7 章 15",
+  "source": "经典题型（题意整理）",
+  "statement": "<p>一张 20 行 20 列的方格纸，一共有 21 条横线和 21 条竖线，它们的交点（格点）排成 21x21 的点阵。</p><p><strong>沿着格线</strong>从最左上角那个格点走到最右下角那个格点，每步只能沿格线向右或向下挪一小段（一个小方格的边长）。横着必须走满 20 段、竖着也必须走满 20 段，一共 40 段。</p><p>问一共有多少种不同的走法。</p><p>答案是十二位数，直接填数字。写一遍递推，再套一遍组合公式，两个对上才动手填。小心别和编程题里格子到格点的算法混了：这里是格点到格点，所以是 C(40, 20)。</p>",
+  "input_format": "填空题不需要写输入，把最终结果（一个数字或一串字符）填进答题区即可。",
+  "output_format": "只要最终结果，过程不记分。",
+  "examples": [],
+  "limits": {
+    "time_ms": 2000
+  },
+  "answer": "137846528820",
+  "answer_hint": "20x20 的方格纸沿格线走要走满 40 段、其中 20 段向下，所以是 C(40,20)，不是 C(20,10)，也不是 C(38,19)。",
+  "tests": [],
+  "solution": {
+    "idea": "<p>递推 <code>dp[i][j] = dp[i-1][j] + dp[i][j-1]</code>，起点是 1，本质上就是把杨辉三角铺到二维。</p><p>组合角度：一共走 40 步，选定哪 20 步向下就定死了整条路线，所以是 <code>C(40, 20)</code>。Python 大整数直接算，不会溢出。</p>",
+    "code": "\"\"\"p22 填空：20x20 的方格网，从左上角走到右下角（只能向右或向下），一共多少条路径。\nDP 递推一遍，再用组合数 C(40, 20) 算一遍，两边必须一致。\n\"\"\"\nfrom math import comb\n\nN = M = 20\ndp = [[0] * (M + 1) for _ in range(N + 1)]\ndp[0][0] = 1\nfor i in range(N + 1):\n    for j in range(M + 1):\n        if i == 0 and j == 0:\n            continue\n        v = 0\n        if i > 0:\n            v += dp[i - 1][j]\n        if j > 0:\n            v += dp[i][j - 1]\n        dp[i][j] = v\nby_dp = dp[N][M]\nby_comb = comb(N + M, N)\nassert by_dp == by_comb, (by_dp, by_comb)\nprint(by_dp)\n",
+    "output": "$ python p22_grid_paths.py\n137846528820",
+    "reference": "code/ch13-real-problems/09_paths.py",
+    "answer": "137846528820"
+  }
+}

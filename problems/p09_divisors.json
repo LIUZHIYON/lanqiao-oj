@@ -1,0 +1,83 @@
+{
+  "id": "p09_divisors",
+  "order": 9,
+  "title": "约数个数与最大真约数",
+  "type": "prog",
+  "difficulty": "提高",
+  "score": 25,
+  "tags": [
+    "质因数分解",
+    "约数"
+  ],
+  "chapter": "第 9 章 06、04（约数与分解）",
+  "source": "蓝桥杯常考题型（题意整理）",
+  "statement": "<p>给一个整数 <code>n</code>，输出两个数：n 的约数个数，以及 n 的最大真约数。</p><p>真约数指的是除开 n 自己以外的约数。比如 12 的约数是 1、2、3、4、6、12，一共 6 个，最大真约数是 6，所以这一行输出 <code>6 6</code>。</p><p>从 1 一直试到 n 太慢。用质因数分解：若 <code>n = p1^e1 * p2^e2 * ...</code>，约数个数就是 <code>(e1+1) * (e2+1) * ...</code>；最大真约数等于 n 除以 n 的最小质因子。</p>",
+  "input_format": "一行一个整数 n（2 ≤ n ≤ 10^12）。",
+  "output_format": "一行两个整数，用空格隔开：n 的约数个数、n 的最大真约数。",
+  "examples": [
+    {
+      "input": "36",
+      "output": "9 18\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 n=36",
+      "input": "36\n",
+      "expected": "9 18\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 n=2",
+      "input": "2\n",
+      "expected": "2 1\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "质数 1000003",
+      "input": "1000003\n",
+      "expected": "2 1\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "平方数 100",
+      "input": "100\n",
+      "expected": "9 50\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "2 的 20 次方",
+      "input": "1048576\n",
+      "expected": "21 524288\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "随机 9 位数",
+      "input": "566631248\n",
+      "expected": "20 283315624\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "最大 n=1e12",
+      "input": "1000000000000\n",
+      "expected": "169 500000000000\r\n",
+      "score": 5,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>先分解质因数，按公式 <code>∏(e+1)</code> 数约数，最大真约数用 <code>n // 最小质因子</code>。</p><p>小数据要用成对枚举核对一遍：<code>for i in range(1, isqrt(n)+1)</code>，遇到约数就把 i 和 n//i 都记上。完全平方数中间那一格只能算一次，这是最常见的失分点。</p>",
+    "code": "\"\"\"p09 约数：输出 n 的约数个数、以及 n 的最大真约数（除 n 自己以外最大的约数）。\n约数个数用质因数分解：n = p1^e1 * p2^e2 ... 时约数个数 = (e1+1)(e2+1)...\n最大真约数 = n 除以 n 的最小质因子。\n\"\"\"\nimport sys\n\n\ndef factorize(n):\n    f = {}\n    d = 2\n    while d * d <= n:\n        while n % d == 0:\n            f[d] = f.get(d, 0) + 1\n            n //= d\n        d += 1 if d == 2 else 2\n    if n > 1:\n        f[n] = f.get(n, 0) + 1\n    return f\n\n\ndef solve(n):\n    fac = factorize(n)\n    cnt = 1\n    smallest = min(fac)\n    for e in fac.values():\n        cnt *= e + 1\n    return cnt, n // smallest\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    cnt, big = solve(int(data[0]))\n    print(cnt, big)\n\n\nmain()\n",
+    "output": "$ python p09_divisors.py\n输入：36\n\n输出：9 18\r\n",
+    "reference": "code/ch09-number-theory/06_divisors.py"
+  }
+}

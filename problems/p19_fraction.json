@@ -1,0 +1,31 @@
+{
+  "id": "p19_fraction",
+  "order": 19,
+  "title": "既约分数",
+  "type": "fill",
+  "difficulty": "提高",
+  "score": 10,
+  "tags": [
+    "最大公约数",
+    "计数"
+  ],
+  "chapter": "第 5 章 14 / 第 9 章 19、首页必做清单第 16 题",
+  "source": "蓝桥杯省赛真题（题意整理）",
+  "statement": "<p>分子和分母都必须是 1 到 2022 之间的整数（含 2022），真分数、假分数、整数都算。</p><p>分子和分母互质（最大公约数是 1）的分数叫既约分数。比如 3/4 是；6/35 是；1/1 也是；而 2/4 不是，因为 2 和 4 有公约数 2。</p><p>问一共能组成多少个不同的既约分数（分子或分母不同就算不同的分数）。答案是一个几百万量级的数。</p>",
+  "input_format": "填空题不需要写输入，把最终结果（一个数字或一串字符）填进答题区即可。",
+  "output_format": "只要最终结果，过程不记分。",
+  "examples": [],
+  "limits": {
+    "time_ms": 2000
+  },
+  "answer": "2486423",
+  "answer_hint": "1/1 这种分子分母相同的会被两半各数一次，用 2*Σφ 之后要减掉重复的那一次。",
+  "tests": [],
+  "solution": {
+    "idea": "<p>固定分母 b，不超过 b 且与 b 互质的分子个数正好是欧拉函数 φ(b)。先把 a ≤ b 这半个三角形数完（每行 φ(b) 个），乘 2 得到全部，再减掉被数了两次的 1/1，所以答案是 <code>2 * Σφ(1..2022) - 1</code>。</p><p>φ 用筛法一次算完。再写一个双重循环 gcd 的版本在 1~100 的小范围核对公式，确认没有多算也没有漏算。</p>",
+    "code": "\"\"\"p19 填空：分子、分母都是 1~2022 的整数，能组成多少个既约分数（分子分母互质）。\n固定分母 b，与 b 互质且不超过 b 的分子有 phi(b) 个；先把 a<=b 的半平面数完，\n再乘 2，最后减掉被数了两次的 (1,1)。小数据再用 gcd 双重循环验证。\n\"\"\"\nfrom math import gcd\n\n\ndef phi_table(n):\n    phi = list(range(n + 1))\n    for i in range(2, n + 1):\n        if phi[i] == i:                      # i 是质数，用它更新所有倍数\n            for j in range(i, n + 1, i):\n                phi[j] = phi[j] // i * (i - 1)\n    return phi\n\n\ndef by_phi(n):\n    phi = phi_table(n)\n    return 2 * sum(phi[1:]) - 1\n\n\ndef by_gcd_double(n):\n    return sum(1 for a in range(1, n + 1) for b in range(1, n + 1) if gcd(a, b) == 1)\n\n\nfor small in (1, 2, 5, 10, 30, 100):\n    assert by_phi(small) == by_gcd_double(small), small\nprint(by_phi(2022))\n",
+    "output": "$ python p19_fraction.py\n2486423",
+    "reference": "code/ch05-brute-force/14_reduced_fractions.py",
+    "answer": "2486423"
+  }
+}

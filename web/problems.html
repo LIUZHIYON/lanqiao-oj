@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231c4f9c'/%3E%3Crect x='6' y='7' width='20' height='4' rx='2' fill='%23ffffff'/%3E%3Crect x='6' y='15' width='14' height='3' rx='1.5' fill='%23a9c8ee'/%3E%3Crect x='6' y='22' width='17' height='3' rx='1.5' fill='%23a9c8ee'/%3E%3C/svg%3E">
+<title>题库 · 蓝桥杯 Python 模拟训练平台</title>
+<link rel="stylesheet" href="assets/oj.css">
+</head>
+<body data-page="problems">
+<header id="topbar"></header>
+
+<main class="wrap">
+  <h2 class="page-title">题库</h2>
+  <div id="app"><div class="card loading"><span class="spin"></span>正在读取本机数据…</div></div>
+</main>
+
+<footer id="foot"></footer>
+
+<script src="assets/oj.js"></script>
+<script>
+(function () {
+  'use strict';
+  var el = OJ.el;
+  OJ.initChrome('problems');
+
+  var state = {
+    items: [],
+    timing: {},
+    f: {
+      type: OJ.qs('type') || '',
+      difficulty: OJ.qs('difficulty') || '',
+      tag: OJ.qs('tag') || '',
+      status: OJ.qs('status') || '',
+      star: OJ.qs('star') || '',
+      q: OJ.qs('q') || ''
+    },
+    sort: { key: OJ.qs('sort') || 'order', dir: OJ.qs('dir') === 'desc' ? -1 : 1 }
+  };
+
+  function num(id) {
+    var m = /^p0*(\d+)/i.exec(id || '');
+    return m ? m[1] : '—';
+  }
+
+  /* ---------------- 排序 ---------------- */
+  var DIFF_RANK = { '入门': 0, '提高': 1, '较难': 2, '未标注': 3 };
+  var SORT_LABEL = {
+    order: '编号', title: '标题', type: '类型', difficulty: '难度', score: '分值',
+    tests: '测试点', status: '状态', tries: '尝试次数', cost: '用时'
+  };
+  /* 下拉里的快捷方式：一个选项对应一组 (key, dir) */
+  var SORT_PRESETS = [
+    { v: 'order:1', t: '编号（默认）' },
+    { v: 'difficulty:1', t: '难度 由易到难' },
+    { v: 'difficulty:-1', t: '难度 由难到易' },
+    { v: 'status:1', t: '未做的排前面' },
+    { v: 'star:-1', t: '收藏的排前面' },
+    { v: 'score:-1', t: '分值 高到低' },
+    { v: 'tests:-1', t: '测试点 多到少' },
+    { v: 'tries:-1', t: '尝试次数 多到少' },
+    { v: 'cost:1', t: '用时 短到长（没做出来的排后面）' },
+    { v: 'title:1', t: '标题 拼音顺序' }
+  ];
+
+  function sortVal(p, key) {
+    switch (key) {
+      case 'order': return Number(num(p.id)) || 0;
+      case 'title': return p.title || '';
+      case 'type': return p.type === 'fill' ? 1 : 0;
+      case 'difficulty': return DIFF_RANK[p.difficulty || '未标注'];
+      case 'score': return Number(p.score) || 0;
+      case 'tests': return Number(p.test_count) || 0;
+      case 'status': return p.solved ? 2 : (p.tries > 0 ? 1 : 0);
+      case 'star': return p.starred ? 1 : 0;
+      case 'tries': return Number(p.tries) || 0;
+      case 'cost':
+        var t = state.timing[p.id];
+        return (t && t.cost !== undefined) ? t.cost : 9e15;
+      default: return 0;
+    }
+  }
+
+  function sortList(list) {
+    var key = state.sort.key, dir = state.sort.dir;
+    return list.slice().sort(function (a, b) {
+      var x = sortVal(a, key), y = sortVal(b, key), r;
+      if (typeof x === 'string' || typeof y === 'string') {
+        r = String(x).localeCompare(String(y), 'zh-CN');
+      } else {
+        r = x === y ? 0 : (x < y ? -1 : 1);
+      }
+      if (r === 0) { r = (Number(num(a.id)) || 0) - (Number(num(b.id)) || 0); }   // 次序稳定
+      return dir === 1 ? r : -r;
+    });
+  }
+
+  function presetValue() {
+    return state.sort.key + ':' + state.sort.dir;
+  }
+
+  /* 用时：从提交记录里算「第一次提交 → 第一次 AC」的间隔 */
+  function buildTiming(subs) {
+    var map = {};
+    (subs || []).forEach(function (s) {
+      var m = map[s.problem_id] || (map[s.problem_id] = { first: null, ac: null });
+      if (m.first === null || s.created_at < m.first) { m.first = s.created_at; }
+      if (s.result === 'AC' && (m.ac === null || s.created_at < m.ac)) { m.ac = s.created_at; }
+    });
+    Object.keys(map).forEach(function (pid) {
+      var m = map[pid];
+      if (m.ac !== null) { m.cost = Math.max(0, m.ac - m.first); }
+    });
+    return map;
+  }
+
+  function statusText(p) {
+    if (p.solved) { return { cls: 'solved', text: '已解' }; }
+    if (p.tries > 0) { return { cls: 'tried', text: '尝试 ' + p.tries + ' 次' }; }
+    return { cls: 'todo', text: '未做' };
+  }
+
+  function costText(p) {
+    var t = state.timing[p.id];
+    var parts = [];
+    if (t && t.cost !== undefined && p.solved) { parts.push('用时 ' + OJ.fmtDur(t.cost)); }
+    else if (t && t.first) { parts.push('首次提交 ' + OJ.fmtTime(t.first).slice(5, 16)); }
+    parts.push(p.tries > 0 ? ('尝试 ' + p.tries + ' 次') : '没交过');
+    return parts.join(' · ');
+  }
+
+  function match(p) {
+    var f = state.f;
+    if (f.type && p.type !== f.type) { return false; }
+    if (f.star && !p.starred) { return false; }
+    if (f.difficulty && (p.difficulty || '') !== f.difficulty) { return false; }
+    if (f.tag && (p.tags || []).indexOf(f.tag) < 0) { return false; }
+    if (f.status === 'todo' && p.solved) { return false; }
+    if (f.status === 'solved' && !p.solved) { return false; }
+    if (f.status === 'tried' && (p.solved || p.tries <= 0)) { return false; }
+    if (f.q) {
+      var hay = [p.id, p.title, p.chapter || '', (p.tags || []).join(' '), OJ.typeLabel(p.type), p.difficulty || '']
+        .join(' ').toLowerCase();
+      if (hay.indexOf(String(f.q).toLowerCase()) < 0) { return false; }
+    }
+    return true;
+  }
+
+  function select(label, key, options, allText) {
+    var sel = el('select', { 'data-key': key, id: 'f_' + key });
+    sel.appendChild(el('option', { value: '', text: allText }));
+    options.forEach(function (o) {
+      var val = typeof o === 'string' ? o : o.v;
+      var txt = typeof o === 'string' ? o : o.t;
+      sel.appendChild(el('option', { value: val, text: txt }));
+    });
+    sel.value = state.f[key] || '';
+    if (sel.value !== (state.f[key] || '')) { sel.value = ''; }
+    sel.addEventListener('change', function () { state.f[key] = sel.value; refresh(); });
+    return el('label', { class: 'field' }, [document.createTextNode(label), sel]);
+  }
+
+  function sortControl() {
+    var sel = el('select', { id: 'f_sort' });
+    SORT_PRESETS.forEach(function (o) { sel.appendChild(el('option', { value: o.v, text: o.t })); });
+    if (SORT_PRESETS.some(function (o) { return o.v === presetValue(); })) { sel.value = presetValue(); }
+    else { sel.value = ''; }
+    sel.addEventListener('change', function () {
+      var kv = sel.value.split(':');
+      state.sort = { key: kv[0], dir: kv[1] === '-1' ? -1 : 1 };
+      refresh();
+    });
+    return el('label', { class: 'field' }, [document.createTextNode('排序'), sel]);
+  }
+
+  function filterCard() {
+    var diffs = [];
+    ['入门', '提高', '较难', '未标注'].forEach(function (d) {
+      if (state.items.some(function (p) { return (p.difficulty || '未标注') === d; })) { diffs.push(d); }
+    });
+    state.items.forEach(function (p) {
+      var d = p.difficulty || '未标注';
+      if (diffs.indexOf(d) < 0) { diffs.push(d); }
+    });
+    var tags = {};
+    state.items.forEach(function (p) { (p.tags || []).forEach(function (t) { tags[t] = 1; }); });
+    var tagList = Object.keys(tags).sort(function (a, b) { return a.localeCompare(b, 'zh-CN'); });
+
+    var search = el('input', { type: 'search', id: 'f_q', placeholder: '标题 / 编号 / 考点关键字', value: state.f.q });
+    search.addEventListener('input', function () { state.f.q = search.value; refresh(); });
+
+    var reset = el('button', { class: 'btn ghost', type: 'button', text: '重置筛选', onclick: function () {
+      state.f = { type: '', difficulty: '', tag: '', status: '', star: '', q: '' };
+      state.sort = { key: 'order', dir: 1 };
+      ['type', 'difficulty', 'tag', 'status', 'star'].forEach(function (k) {
+        var s = document.getElementById('f_' + k); if (s) { s.value = ''; }
+      });
+      var ss = document.getElementById('f_sort'); if (ss) { ss.value = 'order:1'; }
+      search.value = '';
+      refresh();
+    } });
+
+    return el('section', { class: 'card' }, [
+      el('h3', { class: 'card-title' }, [document.createTextNode('筛选'),
+        el('span', { class: 'sub', text: '筛选在这台电脑上完成，不消耗流量' })]),
+      el('div', { class: 'filters' }, [
+        select('类型', 'type', [{ v: 'prog', t: '编程题' }, { v: 'fill', t: '填空题' }], '全部'),
+        select('难度', 'difficulty', diffs, '全部'),
+        select('考点', 'tag', tagList, '全部'),
+        select('状态', 'status', [{ v: 'todo', t: '未做' }, { v: 'tried', t: '尝试过' }, { v: 'solved', t: '已解' }], '全部'),
+        select('收藏', 'star', [{ v: '1', t: '只看收藏' }], '全部'),
+        sortControl(),
+        el('label', { class: 'field grow' }, [document.createTextNode('搜索'), search]),
+        reset
+      ]),
+      el('p', { class: 'muted small', id: 'fCount' })
+    ]);
+  }
+
+  function starCell(p) {
+    var b = el('button', {
+      class: 'star-cell' + (p.starred ? ' on' : ''), type: 'button',
+      text: p.starred ? '★' : '☆', title: p.starred ? '取消收藏' : '收藏这题'
+    });
+    b.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      ev.preventDefault();
+      OJ.api.post('star', { problem_id: p.id, on: !p.starred }).then(function (r) {
+        p.starred = !!r.starred;
+        b.className = 'star-cell' + (p.starred ? ' on' : '');
+        b.textContent = p.starred ? '★' : '☆';
+        b.title = p.starred ? '取消收藏' : '收藏这题';
+        if (state.f.star && !p.starred) { refresh(); }
+      }, function () {
+        b.title = '收藏没保存成功，再点一次试试';
+      });
+    });
+    return b;
+  }
+
+  function row(p) {
+    var st = statusText(p);
+    var tags = el('td', {}, (p.tags || []).map(function (t) { return el('span', { class: 'tag-chip', text: t }); }));
+    if (!(p.tags || []).length) { tags.appendChild(el('span', { class: 'muted small', text: '未分类' })); }
+    var scoreCell = p.solved ? (OJ.fmtScore(p.best_score) + ' 分') :
+      (p.best_score ? (OJ.fmtScore(p.best_score) + '/' + OJ.fmtScore(p.score) + ' 分') : OJ.fmtScore(p.score) + ' 分');
+    return el('tr', { class: 'clickable', onclick: function () { location.href = OJ.linkProblem(p.id); } }, [
+      el('td', { class: 'mono nowrap', text: num(p.id), title: p.id }),
+      el('td', {}, [
+        starCell(p),
+        el('a', { href: OJ.linkProblem(p.id), text: p.title }),
+        el('div', { class: 'muted small', text: p.chapter || '' })
+      ]),
+      el('td', { class: 'nowrap' }, [el('span', { class: 'badge ' + (p.type === 'fill' ? 'b-fill' : 'b-prog'), text: OJ.typeLabel(p.type) })]),
+      el('td', { class: 'nowrap' }, [el('span', { class: 'badge ' + OJ.diffClass(p.difficulty), text: p.difficulty || '未标注' })]),
+      el('td', { class: 'num nowrap', text: OJ.fmtScore(p.score) }),
+      tags,
+      el('td', { class: 'nowrap' }, [
+        el('span', { class: 'st ' + st.cls, text: st.text }),
+        el('div', { class: 'muted small', text: scoreCell + (p.test_count ? ' · ' + p.test_count + ' 个测试点' : '') })
+      ]),
+      el('td', { class: 'small muted nowrap', text: costText(p) }),
+      el('td', { class: 'nowrap' }, [el('a', { class: 'btn small', href: OJ.linkProblem(p.id),
+        text: p.solved ? '回看' : (p.tries ? '接着做' : '进入') })])
+    ]);
+  }
+
+  function tableNode(list) {
+    function th(key, label, cls) {
+      var on = key && state.sort.key === key;
+      var node = el('th', {
+        class: (cls ? cls + ' ' : '') + (key ? 'sortable' + (on ? ' on' : '') : ''),
+        text: label + (on ? (state.sort.dir === 1 ? ' ▲' : ' ▼') : ''),
+        title: key ? ('点击按' + label + (on ? (state.sort.dir === 1 ? '，再点降序' : '，再点升序') : '排序')) : ''
+      });
+      if (key) {
+        node.addEventListener('click', function () {
+          if (state.sort.key === key) { state.sort.dir = -state.sort.dir; }
+          else {
+            state.sort = { key: key, dir: (key === 'order' || key === 'difficulty' || key === 'title' || key === 'cost') ? 1 : -1 };
+          }
+          refresh();
+        });
+      }
+      return node;
+    }
+    var head = el('thead', {}, [el('tr', {}, [
+      th('order', '编号'), th('title', '标题'), th('type', '类型'),
+      th('difficulty', '难度'), th('score', '分值', 'num'), th('', '考点'),
+      th('status', '状态'), th('cost', '用时 / 尝试'), th('', '操作')
+    ])]);
+    var body = el('tbody');
+    list.forEach(function (p) { body.appendChild(row(p)); });
+    var t = el('table', { class: 'grid' }, [head, body]);
+    if (!list.length) {
+      body.appendChild(el('tr', {}, [el('td', { colspan: '9', class: 'empty', text: '没有符合条件的题目，把筛选条件放宽一点试试。' })]));
+    }
+    return el('div', { class: 'table-scroll' }, [t]);
+  }
+
+  var tableHost = null;
+
+  function refresh() {
+    var list = sortList(state.items.filter(match));
+    OJ.clear(tableHost).appendChild(tableNode(list));
+    var done = list.filter(function (p) { return p.solved; }).length;
+    var c = document.getElementById('fCount');
+    if (c) {
+      c.textContent = '当前显示 ' + list.length + ' 道，其中已解 ' + done + ' 道；' +
+        '题库共 ' + state.items.length + ' 道。';
+    }
+  }
+
+  function render(data) {
+    state.items = (data && data.items) || [];
+    OJ.setNavStat(data && data.stats ? data.stats.solved : null, data && data.stats ? data.stats.problems : null);
+    var app = OJ.clear(document.getElementById('app'));
+    app.appendChild(filterCard());
+    tableHost = el('section', { class: 'card' });
+    app.appendChild(tableHost);
+    refresh();
+  }
+
+  function boot() {
+    OJ.clear(document.getElementById('app')).appendChild(OJ.loading('正在读取题库…'));
+    Promise.all([OJ.api.get('problems'), OJ.api.get('submissions', { limit: 500 }).catch(function () { return { items: [] }; })])
+      .then(function (res) {
+        state.timing = buildTiming(res[1] && res[1].items);
+        render(res[0]);
+      }, function (err) {
+        var app = OJ.clear(document.getElementById('app'));
+        app.appendChild(OJ.failBox(err));
+        app.appendChild(el('p', {}, [el('button', { class: 'btn ghost', type: 'button', text: '重新读取', onclick: boot })]));
+      });
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+{
+  "id": "p49_snake_fill_value",
+  "order": 49,
+  "title": "蛇形填数",
+  "type": "prog",
+  "difficulty": "提高",
+  "score": 25,
+  "tags": [
+    "模拟",
+    "找规律",
+    "等差求和"
+  ],
+  "chapter": "第 13 章 03",
+  "source": "蓝桥杯省赛真题（题意整理）",
+  "statement": "<p>把 <code>1, 2, 3, ...</code> 依次填进一张无限大的方格表：行号加列号相同的格子属于同一条反对角线，斜线按 <code>2, 3, 4, ...</code> 的顺序处理，同一条斜线上从最上面那行开始往下填。</p><p>左上角长这样（第 1 行第 1 列填 1）：</p><pre>行1:   1   2   4   7  11\n行2:   3   5   8  12\n行3:   6   9  13\n行4:  10  14\n行5:  15</pre><p>给你行号和列号，输出那一格的数。</p><p>真题只问第 20 行第 20 列，这里把行列放开到 10^9，一格一格模拟填数就不够用了，得把公式推出来。</p>",
+  "input_format": "一行两个整数 row 和 col，行号列号都从 1 开始（1 ≤ row, col ≤ 10^9）。",
+  "output_format": "一行一个整数，是那一格里填的数。",
+  "examples": [
+    {
+      "input": "3 2",
+      "output": "9\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 第 3 行第 2 列",
+      "input": "3 2\n",
+      "expected": "9\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "左上角 1 1",
+      "input": "1 1\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "第一行第 5 列",
+      "input": "1 5\n",
+      "expected": "11\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "第一列第 5 行",
+      "input": "5 1\n",
+      "expected": "15\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "真题 20 行 20 列",
+      "input": "20 20\n",
+      "expected": "761\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "同一条斜线的两端 1 40",
+      "input": "1 40\n",
+      "expected": "781\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机中等 123 200",
+      "input": "123 200\n",
+      "expected": "51804\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大 10^9 量级",
+      "input": "1000000000 999999999\n",
+      "expected": "1999999996000000003\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>设 <code>s = row + col</code>。比 s 小的斜线有 <code>s - 2</code> 条，第 t 条斜线有 t - 1 个格子，所以前面一共填了 <code>1 + 2 + ... + (s-2) = (s-2)(s-1)/2</code> 个数；本条斜线上这一格排在第 <code>row</code> 个，两者相加就是答案。</p><p>行列不太大时照着规则真填一遍网格核对，两种办法一致再交。Python 的整数没有溢出问题，10^9 量级的乘积直接算。</p>",
+    "code": "\"\"\"p49 蛇形填数：把 1,2,3,... 沿反对角线（行号 + 列号为定值的一条斜线）依次填进方格，\n同一条斜线上从最上面那行开始往下填。给出行列（都从 1 开始），输出那一格的数。\n公式：s = row + col，前 s-2 条斜线一共填了 1+2+...+(s-2) = (s-2)(s-1)/2 个数，\n      本条斜线上这一格排在第 row 个，所以值 = (s-2)(s-1)//2 + row。\n行列不太大时真的模拟填一遍，两种办法必须一致。\n\"\"\"\nimport sys\n\n\ndef by_formula(row, col):\n    s = row + col\n    return (s - 2) * (s - 1) // 2 + row\n\n\ndef by_simulation(row, col):\n    \"\"\"照着规则一格一格填，返回 {(行, 列): 数值} 里目标格的值。\"\"\"\n    g = {}\n    val = 1\n    for s in range(2, row + col + 1):\n        for i in range(1, s):                 # 行号递增，列 = s - i\n            g[(i, s - i)] = val\n            val += 1\n    return g[(row, col)]\n\n\ndef solve(row, col):\n    ans = by_formula(row, col)\n    if row + col <= 400:                      # 模拟法代价是 O(s^2)，只在小格子上跑\n        assert by_simulation(row, col) == ans, \"模拟填数与公式不一致\"\n    return ans\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    if not data:\n        return\n    row, col = int(data[0]), int(data[1])\n    print(solve(row, col))\n\n\nmain()\n",
+    "output": "$ python p49_snake_fill_value.py\n输入：3 2\n\n输出：9\r\n",
+    "reference": "code/ch13-real-problems/03_snake_grid.py"
+  }
+}

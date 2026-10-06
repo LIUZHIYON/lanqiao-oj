@@ -1,0 +1,83 @@
+{
+  "id": "p07_knapsack_01",
+  "order": 7,
+  "title": "0-1 背包",
+  "type": "prog",
+  "difficulty": "提高",
+  "score": 25,
+  "tags": [
+    "动态规划",
+    "背包"
+  ],
+  "chapter": "第 7 章 08、09（0-1 背包）",
+  "source": "蓝桥杯常考题型（题意整理）",
+  "statement": "<p>背包容量 <code>W</code>，桌上有 <code>n</code> 件物品，每件有重量和价值，<strong>每件要么整件拿走，要么不要</strong>。问最多能装多少价值。</p><p>这就是 0-1 背包。状态：<code>dp[c]</code> = 容量为 c 时能拿到的最大价值，一件一件物品考虑：装上它会不会更值。</p>",
+  "input_format": "第一行两个整数 n 和 W（1 ≤ n ≤ 100，0 ≤ W ≤ 10000）；接下来 n 行每行两个整数，是这件物品的重量和价值（都介于 1 到 1000）。",
+  "output_format": "一行一个整数，是总重量不超过 W 时能装下的最大价值。",
+  "examples": [
+    {
+      "input": "3 5\n2 3\n4 5\n3 6",
+      "output": "9\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 3 件容量 5",
+      "input": "3 5\n2 3\n4 5\n3 6\n",
+      "expected": "9\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "容量 W=0",
+      "input": "2 0\n1 5\n2 6\n",
+      "expected": "0\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "一件都装不下",
+      "input": "3 1\n5 9\n7 8\n9 10\n",
+      "expected": "0\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "最小 n=1 装得下",
+      "input": "1 10\n3 7\n",
+      "expected": "7\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "刚好装满",
+      "input": "4 10\n2 3\n3 4\n5 8\n6 9\n",
+      "expected": "15\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "随机 8 件",
+      "input": "8 50\n28 8\n2 41\n23 21\n9 1\n6 22\n6 48\n22 35\n3 24\n",
+      "expected": "171\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "大随机 n=100 W=10000",
+      "input": "100 10000\n174 288\n180 264\n187 119\n36 68\n179 347\n155 47\n123 48\n48 52\n63 197\n143 472\n105 75\n85 414\n87 327\n14 279\n2 184\n79 63\n156 269\n60 392\n189 366\n171 359\n155 138\n109 282\n133 317\n16 434\n141 228\n136 199\n73 288\n199 48\n64 1\n127 10\n23 77\n107 157\n110 269\n99 17\n72 115\n93 288\n170 371\n106 75\n33 2\n153 74\n113 91\n101 159\n93 99\n87 467\n104 432\n94 137\n145 463\n64 231\n13 76\n5 394\n188 463\n38 376\n168 19\n114 125\n200 250\n77 3\n86 285\n124 483\n111 461\n95 84\n23 189\n19 430\n12 62\n112 115\n53 169\n99 388\n197 372\n2 375\n47 150\n76 271\n175 153\n97 155\n173 158\n28 84\n182 493\n111 360\n47 115\n71 308\n192 180\n83 243\n29 218\n113 208\n168 350\n151 420\n101 170\n156 443\n44 101\n25 120\n96 216\n142 158\n126 150\n152 261\n10 373\n107 370\n73 196\n104 68\n127 396\n106 280\n73 407\n111 37\n",
+      "expected": "22819\r\n",
+      "score": 5,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>一维滚动数组，内层容量必须<strong>从大到小</strong>遍历：<code>for c in range(W, w-1, -1): dp[c] = max(dp[c], dp[c-w] + v)</code>。从小到大的话，同一件物品会被重复计算，那就变成完全背包了。</p><p>重量超过 W 的物品直接跳过；W = 0 时答案是 0，这是最容易漏的边界。</p>",
+    "code": "\"\"\"p07 0-1 背包：容量 W，每件物品最多选一次，求能装下的最大价值。\n一维滚动数组 dp[c] = 容量 c 时的最大价值；内层必须从大到小遍历，\n这样每个物品只会被用一次（从小到大就会重复取同一件）。\n\"\"\"\nimport sys\n\n\ndef knapsack(items, w_cap):\n    dp = [0] * (w_cap + 1)\n    for weight, value in items:\n        if weight > w_cap:\n            continue\n        for c in range(w_cap, weight - 1, -1):     # 逆序！\n            nv = dp[c - weight] + value\n            if nv > dp[c]:\n                dp[c] = nv\n    return dp[w_cap]\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    if not data:\n        return\n    n, w_cap = int(data[0]), int(data[1])\n    items = []\n    pos = 2\n    for _ in range(n):\n        items.append((int(data[pos]), int(data[pos + 1])))\n        pos += 2\n    print(knapsack(items, w_cap))\n\n\nmain()\n",
+    "output": "$ python p07_knapsack_01.py\n输入：3 5\n2 3\n4 5\n3 6\n\n输出：9\r\n",
+    "reference": "code/ch07-dp/09_knapsack_1d.py"
+  }
+}

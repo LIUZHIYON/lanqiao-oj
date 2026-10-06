@@ -1,0 +1,83 @@
+{
+  "id": "p39_mult_table",
+  "order": 39,
+  "title": "九九乘法表",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "嵌套循环",
+    "格式输出"
+  ],
+  "chapter": "第 2 章 嵌套循环",
+  "source": "蓝桥杯风格语法练习",
+  "statement": "<p>输出前 n 行九九乘法表，形状是下三角。</p><p>第 <code>i</code> 行有 <code>i</code> 个算式，从左到右依次是 <code>1*i=结果</code>、<code>2*i=结果</code>、……、<code>i*i=结果</code>。比如第 4 行是 <code>1*4=4 2*4=8 3*4=12 4*4=16</code>。</p><p>算式之间恰好一个空格，行末不能有多余空格。</p>",
+  "input_format": "一行一个整数 n（1 ≤ n ≤ 9）。",
+  "output_format": "共 n 行。第 i 行有 i 个算式，形如 j*i=积，算式之间用一个空格分隔，行末没有空格。",
+  "examples": [
+    {
+      "input": "2",
+      "output": "1*1=1\r\n1*2=2 2*2=4\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 n=2",
+      "input": "2\n",
+      "expected": "1*1=1\r\n1*2=2 2*2=4\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 n=1",
+      "input": "1\n",
+      "expected": "1*1=1\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "n=3",
+      "input": "3\n",
+      "expected": "1*1=1\r\n1*2=2 2*2=4\r\n1*3=3 2*3=6 3*3=9\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "n=4",
+      "input": "4\n",
+      "expected": "1*1=1\r\n1*2=2 2*2=4\r\n1*3=3 2*3=6 3*3=9\r\n1*4=4 2*4=8 3*4=12 4*4=16\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "n=6",
+      "input": "6\n",
+      "expected": "1*1=1\r\n1*2=2 2*2=4\r\n1*3=3 2*3=6 3*3=9\r\n1*4=4 2*4=8 3*4=12 4*4=16\r\n1*5=5 2*5=10 3*5=15 4*5=20 5*5=25\r\n1*6=6 2*6=12 3*6=18 4*6=24 5*6=30 6*6=36\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "n=8",
+      "input": "8\n",
+      "expected": "1*1=1\r\n1*2=2 2*2=4\r\n1*3=3 2*3=6 3*3=9\r\n1*4=4 2*4=8 3*4=12 4*4=16\r\n1*5=5 2*5=10 3*5=15 4*5=20 5*5=25\r\n1*6=6 2*6=12 3*6=18 4*6=24 5*6=30 6*6=36\r\n1*7=7 2*7=14 3*7=21 4*7=28 5*7=35 6*7=42 7*7=49\r\n1*8=8 2*8=16 3*8=24 4*8=32 5*8=40 6*8=48 7*8=56 8*8=64\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "最大 n=9",
+      "input": "9\n",
+      "expected": "1*1=1\r\n1*2=2 2*2=4\r\n1*3=3 2*3=6 3*3=9\r\n1*4=4 2*4=8 3*4=12 4*4=16\r\n1*5=5 2*5=10 3*5=15 4*5=20 5*5=25\r\n1*6=6 2*6=12 3*6=18 4*6=24 5*6=30 6*6=36\r\n1*7=7 2*7=14 3*7=21 4*7=28 5*7=35 6*7=42 7*7=49\r\n1*8=8 2*8=16 3*8=24 4*8=32 5*8=40 6*8=48 7*8=56 8*8=64\r\n1*9=9 2*9=18 3*9=27 4*9=36 5*9=45 6*9=54 7*9=63 8*9=72 9*9=81\r\n",
+      "score": 5,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>外层 <code>for i in range(1, n + 1)</code>，内层 <code>for j in range(1, i + 1)</code>——内层的上界跟着外层走，这才印得出下三角。</p><p>输出别用 <code>print(..., end=' ')</code> 一个一个打，很容易在行尾多留一个空格。把一行的算式先收进列表，再 <code>' '.join(行)</code>，整表拼好一次性输出。</p>",
+    "code": "\"\"\"p39 九九乘法表：读入 n（不超过 9），输出前 n 行。\n第 i 行有 i 个算式，依次是 1*i、2*i、……、i*i，算式之间一个空格。\n练的语法点：嵌套循环 + 用 join 拼一行，避免行末多空格。\n\"\"\"\nimport sys\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    n = int(data[0])\n    lines = []\n    for i in range(1, n + 1):\n        parts = []\n        for j in range(1, i + 1):\n            parts.append(\"{}*{}={}\".format(j, i, j * i))\n        lines.append(\" \".join(parts))\n    sys.stdout.write(\"\\n\".join(lines) + \"\\n\")\n\n\nmain()\n",
+    "output": "$ python p39_mult_table.py\n输入：2\n\n输出：1*1=1\r\n1*2=2 2*2=4\r\n",
+    "reference": "code/ch02-control/04_enumerate_nested.py"
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "id": "p31_bmi_level",
+  "order": 31,
+  "title": "BMI 判定",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "if-elif",
+    "浮点数"
+  ],
+  "chapter": "第 2 章 流程控制 / 第 1 章 浮点数",
+  "source": "蓝桥杯风格语法练习",
+  "statement": "<p>身体质量指数 <code>BMI = 体重（公斤）÷ 身高（米）÷ 身高（米）</code>。</p><p>按下面的标准输出等级，注意每一档左边界算进来、右边界不算：</p><ul><li>BMI 小于 18.5：偏瘦</li><li>18.5 到 24：正常（含 18.5，不含 24）</li><li>24 到 28：偏胖（含 24，不含 28）</li><li>28 及以上：肥胖（含 28）</li></ul><p>用 <code>if-elif-else</code> 从上往下判断，每个分支只写上界，不要写成一串互相重叠的条件。</p>",
+  "input_format": "一行两个数：身高（米，小数，1 ≤ 身高 ≤ 2.5）和体重（公斤，小数，1 ≤ 体重 ≤ 300），空格分隔。",
+  "output_format": "一行一个等级，只能是 偏瘦、正常、偏胖、肥胖 四个词之一。",
+  "examples": [
+    {
+      "input": "1.75 70",
+      "output": "正常\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 1.75 米 70 公斤",
+      "input": "1.75 70\n",
+      "expected": "正常\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "BMI 正好 18.5",
+      "input": "2.0 74\n",
+      "expected": "正常\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "刚低于 18.5",
+      "input": "2.0 73.9\n",
+      "expected": "偏瘦\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "BMI 正好 24",
+      "input": "1.0 24\n",
+      "expected": "偏胖\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "刚低于 24",
+      "input": "1.0 23.9\n",
+      "expected": "正常\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "BMI 正好 28",
+      "input": "1.0 28\n",
+      "expected": "肥胖\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "大体重一定肥胖",
+      "input": "1.6 200\n",
+      "expected": "肥胖\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机身高体重",
+      "input": "1.99 56.1\n",
+      "expected": "偏瘦\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p><code>bmi = weight / (height * height)</code>，然后一路 <code>if bmi &lt; 18.5 ... elif bmi &lt; 24 ... elif bmi &lt; 28 ... else ...</code>。</p><p>边界最容易错：BMI 正好 18.5 属于正常，正好 24 属于偏胖，正好 28 属于肥胖。自测就挑整数关系的数据，比如身高 2.0 米、体重 74 公斤正好是 18.5。</p>",
+    "code": "\"\"\"p31 BMI 判定：读入身高（米）和体重（公斤），输出偏瘦 / 正常 / 偏胖 / 肥胖。\n练的语法点：if-elif-else 的区间划分（边界只写一次）与浮点数运算。\n\"\"\"\nimport sys\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    height = float(data[0])\n    weight = float(data[1])\n    bmi = weight / (height * height)\n    if bmi < 18.5:\n        print(\"偏瘦\")\n    elif bmi < 24:\n        print(\"正常\")\n    elif bmi < 28:\n        print(\"偏胖\")\n    else:\n        print(\"肥胖\")\n\n\nmain()\n",
+    "output": "$ python p31_bmi_level.py\n输入：1.75 70\n\n输出：正常\r\n",
+    "reference": "code/ch02-control/01_if_elif_basics.py"
+  }
+}
