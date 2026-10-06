@@ -1,0 +1,83 @@
+{
+  "id": "p63_stairs_climb",
+  "order": 63,
+  "title": "上台阶",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "动态规划",
+    "递推"
+  ],
+  "chapter": "第 7 章 02、25",
+  "source": "蓝桥杯常考题型（题意整理）",
+  "statement": "<p>一共 <code>n</code> 级台阶，站在最下面，每一步要么跨 <code>1</code> 级，要么跨 <code>2</code> 级，问正好走到第 n 级一共有多少种走法。</p><p>比如 <code>n = 4</code>，五种走法分别是 <code>1+1+1+1</code>、<code>1+1+2</code>、<code>1+2+1</code>、<code>2+1+1</code>、<code>2+2</code>，输出 <code>5</code>。</p><p>这是线性动态规划最小的一道题。别写递归函数一层层算到底 （<code>n = 45</code> 会算到天黑），改成从小往大递推，把每一级的结果存进列表，后面要用直接取。</p>",
+  "input_format": "一行一个整数 n（1 ≤ n ≤ 45），是台阶的总级数。",
+  "output_format": "一行一个整数，是走法总数。",
+  "examples": [
+    {
+      "input": "4",
+      "output": "5\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 4 级台阶",
+      "input": "4\n",
+      "expected": "5\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 n=1",
+      "input": "1\n",
+      "expected": "1\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "n=2 刚好能跨两级",
+      "input": "2\n",
+      "expected": "2\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "n=3",
+      "input": "3\n",
+      "expected": "3\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "n=10",
+      "input": "10\n",
+      "expected": "89\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "n=24",
+      "input": "24\n",
+      "expected": "75025\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "最大 n=45",
+      "input": "45\n",
+      "expected": "1836311903\r\n",
+      "score": 5,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>按<em>最后一步</em>分类：最后跨 1 级，说明前面走完了 <code>i-1</code> 级，有 <code>f[i-1]</code> 种；最后跨 2 级，有 <code>f[i-2]</code> 种。两类不重不漏，所以 <code>f[i] = f[i-1] + f[i-2]</code>。</p><p>起步 <code>f[1] = 1</code>、<code>f[2] = 2</code>，一个 for 循环填到 n。写完拿 n = 1、2、3、4 各口算一遍，对上了再往下写，动态规划全靠这几格站稳。</p>",
+    "code": "\"\"\"p63 上台阶：n 级台阶，每步跨 1 级或 2 级，问一共有多少种走法。\n线性 DP 最小的样子：把走法按\"最后一步跨了几级\"分成两类，\n一类是最后跨 1 级（前面走掉 i-1 级，有 f[i-1] 种），一类是最后跨 2 级（有 f[i-2] 种），\n两类不重不漏，所以 f[i] = f[i-1] + f[i-2]。\n\"\"\"\nimport sys\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    n = int(data[0])\n    f = [0] * (n + 2)             # 多开两格，n = 1 时也不会越界\n    f[1] = 1                      # 1 级：只能跨 1 步\n    f[2] = 2                      # 2 级：1+1 或者一次跨 2 级\n    for i in range(3, n + 1):\n        f[i] = f[i - 1] + f[i - 2]\n    print(f[n])\n\n\nmain()\n",
+    "output": "$ python p63_stairs_climb.py\n输入：4\n\n输出：5\r\n",
+    "reference": "code/ch07-dp/02_climb_stairs.py"
+  }
+}

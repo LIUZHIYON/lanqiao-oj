@@ -1,0 +1,90 @@
+{
+  "id": "p65_knapsack_tiny",
+  "order": 65,
+  "title": "小背包",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "动态规划",
+    "背包"
+  ],
+  "chapter": "第 7 章 08、09",
+  "source": "蓝桥杯常考题型（题意整理）",
+  "statement": "<p>背包容量 <code>W</code>，桌上 <code>n</code> 件物品，每件有重量和价值，<strong>每件要么整件拿走，要么留下</strong>。</p><p>问装的总重量不超过 W 时，总价值最大能到多少。</p><p>比如 <code>3 5</code> 配 <code>2 3</code>、<code>4 5</code>、<code>3 6</code>：拿第一件和第三件正好重 5，价值 <code>3 + 6 = 9</code>，这是最大的。</p><p>这题物品只有十几件，把每件「拿 / 不拿」全枚举一遍（<code>2^15</code> 种）也照样出答案。先用枚举弄明白，再换成背包递推。</p>",
+  "input_format": "第一行两个整数 n 和 W（1 ≤ n ≤ 15，0 ≤ W ≤ 40）；接下来 n 行每行两个整数，是这件物品的重量和价值（都在 1 到 20 之间）。",
+  "output_format": "一行一个整数，是总重量不超过 W 时能装下的最大价值。",
+  "examples": [
+    {
+      "input": "3 5\n2 3\n4 5\n3 6",
+      "output": "9\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 3 件容量 5",
+      "input": "3 5\n2 3\n4 5\n3 6\n",
+      "expected": "9\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "容量 W=0",
+      "input": "2 0\n1 5\n2 6\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "一件都装不下",
+      "input": "3 1\n5 9\n7 8\n9 10\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最小 n=1 装得下",
+      "input": "1 10\n3 7\n",
+      "expected": "7\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "刚好装满",
+      "input": "4 7\n2 3\n3 4\n5 8\n6 9\n",
+      "expected": "11\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "价值全是 1",
+      "input": "5 3\n1 1\n1 1\n1 1\n1 1\n1 1\n",
+      "expected": "3\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机 8 件",
+      "input": "8 20\n13 19\n17 8\n8 4\n15 7\n4 9\n14 17\n13 9\n7 17\n",
+      "expected": "36\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大 n=15 容量 40",
+      "input": "15 40\n17 6\n18 10\n9 11\n15 6\n4 2\n20 17\n15 1\n2 20\n17 11\n16 3\n17 11\n3 6\n15 2\n7 12\n19 9\n",
+      "expected": "60\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>背包递推：<code>dp[c]</code> = 容量为 c 时能装下的最大价值，一件一件考虑，<code>dp[c] = max(dp[c], dp[c-w] + v)</code>。</p><p>内层容量必须<strong>从大到小</strong>走，这样这件物品只会被算一次；从小到大就走歪成「同一件能反复拿」了。</p><p>容量 0 一件也装不了，答案是 0；所有物品都比 W 重时答案也是 0。这两个测试点最容易看出有没有多算。</p>",
+    "code": "\"\"\"p65 小背包：容量 W，n 件物品各有重量和价值，每件要么整件拿走要么不要，\n求总重量不超过 W 时能装下的最大价值。\n物品只有十几件，所以两种写法都跑一遍互相核对：\n  · 暴力 dfs：对每件物品问一次\"拿还是不拿\"，两条分支往下走\n  · 一维滚动数组的 0-1 背包：内层容量必须从大到小，否则同一件会被用两次\n\"\"\"\nimport sys\n\n\ndef by_dfs(items, W):\n    \"\"\"枚举每件拿不拿，最多 2^n 个叶子。\"\"\"\n    best = 0\n\n    def dfs(idx, weight, value):\n        nonlocal best\n        if weight > W:                # 超重了，这一支不用再往下走\n            return\n        if value > best:\n            best = value\n        if idx == len(items):\n            return\n        dfs(idx + 1, weight, value)           # 不要这件\n        w, v = items[idx]\n        dfs(idx + 1, weight + w, value + v)   # 要这件\n\n    dfs(0, 0, 0)\n    return best\n\n\ndef by_dp(items, W):\n    dp = [0] * (W + 1)                # dp[c] = 容量为 c 时能装下的最大价值\n    for w, v in items:\n        for c in range(W, w - 1, -1):  # 从大到小，保证每件最多用一次\n            if dp[c - w] + v > dp[c]:\n                dp[c] = dp[c - w] + v\n    return dp[W]\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    if not data:\n        return\n    n, W = int(data[0]), int(data[1])\n    items = []\n    pos = 2\n    for _ in range(n):\n        items.append((int(data[pos]), int(data[pos + 1])))\n        pos += 2\n    assert pos == len(data), \"物品行数对不上\"\n\n    ans = by_dp(items, W)\n    assert ans == by_dfs(items, W), \"背包递推与枚举子集不一致\"\n    print(ans)\n\n\nmain()\n",
+    "output": "$ python p65_knapsack_tiny.py\n输入：3 5\n2 3\n4 5\n3 6\n\n输出：9\r\n",
+    "reference": "code/ch07-dp/08_knapsack_2d.py"
+  }
+}

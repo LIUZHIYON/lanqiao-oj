@@ -1,0 +1,83 @@
+{
+  "id": "p74_dsu_query",
+  "order": 74,
+  "title": "合并与查询",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "并查集",
+    "连通块"
+  ],
+  "chapter": "第 10 章 05、06",
+  "source": "蓝桥杯风格算法练习",
+  "statement": "<p>一开始 <code>n</code> 个人各在一个组里（一共 n 个组）。有两种操作：把两个人合并到同一组；问两个人是不是同一组。</p><p>合并是传递的：a 和 b 并过、b 和 c 并过，那 a、b、c 就在同一组。</p><p>把每个询问的答案按顺序输出 yes / no，最后再输出还剩几个组。重复合并已在同一组的两个人不会改变组数。</p>",
+  "input_format": "第一行两个整数 n 和 q（1 ≤ n ≤ 500，0 ≤ q ≤ 500）；接下来 q 行每行三个整数 op、a、b。op = 1 表示把 a 和 b 合并到同一组；op = 2 表示问 a 和 b 是不是同一组（1 ≤ a, b ≤ n）。",
+  "output_format": "每个 op = 2 的询问输出一行 yes 或 no；全部操作做完，最后一行输出还剩多少个组。",
+  "examples": [
+    {
+      "input": "3 3\n1 1 2\n2 1 2\n2 1 3",
+      "output": "yes\r\nno\r\n2\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 三人两条关系一问",
+      "input": "3 3\n1 1 2\n2 1 2\n2 1 3\n",
+      "expected": "yes\r\nno\r\n2\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 n=1 一次操作都没有",
+      "input": "1 0\n",
+      "expected": "1\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "只问不合并",
+      "input": "4 2\n2 1 2\n2 3 4\n",
+      "expected": "no\r\nno\r\n4\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "重复合并同一对",
+      "input": "3 4\n1 1 2\n1 1 2\n1 2 1\n2 1 2\n",
+      "expected": "yes\r\n2\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "一条链串成一组",
+      "input": "5 5\n1 1 2\n1 2 3\n1 3 4\n1 4 5\n2 1 5\n",
+      "expected": "yes\r\n1\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "自己和自己合并",
+      "input": "3 3\n1 2 2\n2 2 2\n2 1 3\n",
+      "expected": "yes\r\nno\r\n3\r\n",
+      "score": 3,
+      "hidden": true
+    },
+    {
+      "name": "随机 n=500 q=500",
+      "input": "500 500\n1 135 349\n2 175 181\n1 100 377\n2 151 477\n1 338 376\n1 484 180\n2 435 378\n2 318 470\n2 387 350\n2 3 350\n1 308 198\n1 194 389\n2 429 225\n1 431 161\n2 371 20\n2 218 449\n1 460 197\n2 112 420\n2 131 46\n1 213 221\n1 163 474\n1 302 448\n2 421 127\n2 99 166\n2 406 173\n1 151 402\n1 49 431\n1 89 206\n1 430 104\n2 152 284\n2 336 322\n1 254 472\n2 297 482\n2 60 471\n1 284 218\n2 293 406\n2 48 194\n1 261 400\n2 110 105\n1 186 44\n1 308 240\n2 148 122\n1 352 275\n2 87 341\n2 413 219\n1 500 290\n1 366 245\n2 300 451\n1 57 390\n2 443 259\n1 474 184\n2 403 221\n1 16 321\n1 309 284\n2 325 182\n1 182 125\n1 303 318\n2 386 353\n2 50 73\n2 80 357\n2 424 341\n2 183 254\n2 198 459\n1 357 419\n2 352 263\n1 25 13\n1 254 369\n1 261 340\n2 72 383\n1 263 366\n1 426 149\n2 153 6\n1 107 183\n2 316 364\n2 317 158\n2 411 88\n1 400 288\n1 387 6\n2 14 213\n2 56 21\n2 394 47\n1 76 457\n2 102 199\n2 268 438\n2 470 334\n2 317 183\n1 64 41\n1 330 364\n2 188 300\n1 32 191\n1 238 138\n2 335 323\n2 47 272\n2 416 131\n1 169 454\n1 57 304\n2 339 31\n1 369 263\n1 164 403\n2 243 378\n1 378 424\n1 191 495\n1 190 227\n2 453 88\n2 447 261\n2 339 247\n2 457 23\n1 234 121\n2 64 298\n2 282 236\n1 183 42\n2 94 66\n1 500 2\n1 63 192\n2 437 92\n2 367 329\n1 19 154\n2 500 357\n2 235 290\n1 405 40\n2 63 144\n1 151 413\n1 361 50\n2 459 72\n2 184 303\n2 285 484\n1 124 238\n1 186 383\n2 12 129\n1 52 324\n1 440 245\n2 345 117\n2 285 386\n2 198 102\n2 29 306\n2 222 316\n1 148 177\n1 68 261\n1 452 322\n1 442 380\n2 473 450\n2 337 67\n2 325 392\n1 25 496\n1 194 268\n2 407 190\n2 399 5\n2 422 385\n1 49 286\n2 214 425\n2 374 65\n2 294 168\n1 35 126\n1 227 55\n2 112 377\n2 419 30\n1 460 83\n1 90 215\n2 278 192\n1 466 341\n1 264 295\n2 407 356\n1 258 177\n1 419 74\n1 406 291\n1 494 9\n1 500 208\n2 166 277\n1 179 170\n1 153 260\n2 224 282\n1 49 142\n2 16 243\n1 173 398\n1 75 117\n2 3 13\n1 179 308\n2 150 240\n1 163 382\n1 239 169\n1 35 374\n1 379 280\n1 238 406\n2 393 452\n2 5 15\n1 484 404\n2 119 496\n2 274 335\n1 480 391\n1 129 402\n1 185 256\n2 178 378\n2 320 106\n1 292 387\n1 361 56\n1 184 453\n1 74 430\n2 415 122\n1 421 201\n1 481 89\n1 55 198\n2 424 65\n1 2 304\n1 290 437\n1 244 166\n1 276 257\n2 135 437\n1 43 53\n1 203 55\n1 103 470\n2 155 249\n2 301 304\n1 48 414\n1 120 272\n2 22 152\n1 450 345\n2 300 290\n2 342 353\n2 398 415\n2 108 4\n2 328 220\n1 29 384\n1 34 295\n1 146 199\n1 134 357\n2 114 393\n2 476 397\n1 173 445\n2 86 335\n1 497 127\n2 86 69\n2 118 361\n2 35 261\n2 30 329\n1 225 282\n1 248 193\n1 55 71\n1 349 261\n1 419 182\n2 404 350\n1 321 42\n2 311 163\n1 350 435\n2 496 481\n1 363 86\n2 117 115\n2 377 359\n2 394 459\n2 238 270\n2 357 470\n2 245 413\n1 19 170\n2 496 102\n2 483 117\n1 197 287\n2 214 489\n1 70 379\n2 444 4\n1 431 495\n2 317 153\n2 61 492\n1 258 457\n2 414 393\n2 387 403\n2 107 369\n2 149 126\n1 265 244\n2 327 260\n1 396 367\n2 265 71\n1 368 244\n2 238 328\n2 91 304\n2 319 18\n1 213 46\n2 332 1\n2 301 15\n2 197 228\n1 410 278\n2 280 262\n1 297 200\n1 300 441\n1 45 348\n2 229 193\n2 259 118\n2 453 108\n1 200 234\n1 4 276\n2 358 411\n1 132 364\n1 459 242\n2 206 314\n2 171 379\n1 170 265\n2 79 165\n1 280 423\n2 40 101\n2 245 189\n2 254 143\n2 27 337\n1 444 417\n2 294 451\n1 132 331\n1 83 8\n2 415 450\n1 248 68\n2 185 162\n1 34 241\n1 62 11\n1 275 288\n2 103 301\n2 133 103\n1 174 289\n2 134 390\n2 225 254\n2 226 225\n2 331 15\n1 23 44\n2 24 216\n1 402 437\n2 332 178\n2 251 390\n1 141 108\n2 157 76\n1 198 460\n2 275 131\n1 242 197\n2 230 401\n1 9 290\n1 479 295\n1 109 375\n1 339 474\n1 357 490\n1 394 252\n1 180 96\n1 238 438\n2 69 252\n2 285 140\n1 112 426\n2 353 422\n2 471 382\n1 209 342\n2 224 263\n2 158 127\n1 393 293\n2 25 333\n2 249 285\n2 57 472\n1 395 23\n2 148 277\n2 145 488\n2 31 460\n1 362 256\n1 230 236\n1 483 293\n2 196 144\n2 312 359\n1 264 143\n2 21 478\n1 137 459\n1 103 17\n1 456 87\n1 480 414\n2 370 458\n2 308 403\n1 343 460\n1 261 51\n1 211 434\n2 346 150\n1 33 281\n2 65 389\n1 24 156\n2 271 193\n1 498 125\n1 117 241\n2 485 184\n1 432 43\n1 186 127\n2 3 125\n2 145 482\n1 58 197\n2 226 333\n1 149 51\n1 444 170\n1 294 106\n1 495 124\n1 72 450\n2 175 486\n1 156 181\n2 376 262\n2 479 19\n1 267 350\n1 94 421\n2 272 382\n2 330 60\n1 245 495\n1 257 174\n1 136 37\n2 74 222\n2 76 375\n2 90 225\n2 23 291\n1 83 474\n2 373 483\n2 254 329\n2 345 480\n1 150 136\n1 5 56\n1 380 282\n2 254 372\n1 210 280\n1 105 442\n2 165 246\n1 454 430\n1 313 306\n2 131 64\n1 49 414\n2 442 246\n2 83 484\n1 38 211\n1 447 310\n1 464 208\n2 481 273\n1 367 116\n2 397 177\n2 117 349\n1 349 221\n1 262 185\n1 170 64\n2 427 248\n2 423 231\n2 437 425\n1 399 55\n2 9 205\n1 412 259\n1 478 233\n1 276 152\n2 1 458\n2 111 185\n1 217 451\n2 59 273\n2 487 295\n2 81 394\n1 140 348\n2 219 438\n1 243 392\n1 386 277\n2 388 162\n1 111 256\n1 101 42\n2 317 313\n1 201 425\n1 188 208\n2 377 31\n1 392 13\n1 17 258\n1 279 289\n2 164 161\n2 279 396\n1 161 122\n1 67 29\n1 156 288\n1 498 124\n1 258 24\n1 166 266\n2 495 74\n1 10 160\n1 130 59\n1 244 77\n2 344 11\n1 64 488\n1 64 1\n1 168 256\n2 129 38\n2 26 157\n2 36 42\n1 243 271\n1 332 443\n2 147 13\n2 174 198\n1 365 480\n1 499 461\n1 214 369\n1 74 81\n1 445 428\n2 76 107\n1 301 126\n1 360 4\n2 444 265\n1 78 260\n1 405 182\n2 457 221\n2 372 52\n2 184 13\n1 137 436\n1 400 40\n2 485 390\n1 227 375\n2 351 171\n1 16 424\n",
+      "expected": "no\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nyes\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nno\r\nyes\r\nyes\r\nno\r\nno\r\nno\r\nno\r\n243\r\n",
+      "score": 5,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>并查集就两个函数：<code>find(x)</code> 沿着 parent 一路走到根，<code>union(a, b)</code> 把两个根接起来。同不同组，只看 <code>find</code> 出来的根是不是同一个。</p><p><code>find</code> 写成 for/while 循环加路径减半（<code>parent[x] = parent[parent[x]]</code>），别用递归；合并时把小的那棵树挂到大的下面，树才不会退化成一条长链。</p><p>组数：一开始是 n，只有真的把两个不同的根合并时才减 1，已经同组时什么都不做。最后再 <code>find</code> 一遍所有点，数不同的根，跟维护的组数对得上才算写对。</p>",
+    "code": "\"\"\"p74 合并与查询（并查集入门）：\n操作 1 a b 把 a、b 合并到同一组；操作 2 a b 问 a、b 是否同组，输出 yes 或 no；\n全部操作做完，最后一行输出还剩多少个组。\nfind 找根：一路 parent[x] = x 往上走到根。这里用循环加路径减半，别写成深层递归。\n组数一开始是 n，每次真的把两个不同的根合起来才减 1。\n\"\"\"\nimport sys\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    if not data:\n        return\n    n, q = int(data[0]), int(data[1])\n    parent = list(range(n))\n    size = [1] * n                    # size 只有根上才是这一组的真实人数\n\n    def find(x):\n        while parent[x] != x:\n            parent[x] = parent[parent[x]]     # 路径减半：往上跳一格\n            x = parent[x]\n        return x\n\n    groups = n\n    out = []\n    pos = 2\n    for _ in range(q):\n        op = int(data[pos])\n        a = int(data[pos + 1]) - 1\n        b = int(data[pos + 2]) - 1\n        pos += 3\n        assert pos <= len(data), \"操作行数不够\"\n        ra, rb = find(a), find(b)\n        if op == 1:\n            if ra != rb:              # 已经同组就什么都不用做\n                if size[ra] < size[rb]:\n                    ra, rb = rb, ra   # 小挂到大下面，树才不会退化成一条链\n                parent[rb] = ra\n                size[ra] += size[rb]\n                groups -= 1\n        else:\n            out.append(\"yes\" if ra == rb else \"no\")\n\n    # 数根的时候要把每个点都 find 到底，路径压缩过之后父节点不一定是根\n    roots = len(set(find(i) for i in range(n)))\n    assert roots == groups, \"维护的组数与实际根数不一致\"\n    out.append(str(groups))\n    sys.stdout.write(\"\\n\".join(out) + \"\\n\")\n\n\nmain()\n",
+    "output": "$ python p74_dsu_query.py\n输入：3 3\n1 1 2\n2 1 2\n2 1 3\n\n输出：yes\r\nno\r\n2\r\n",
+    "reference": "code/ch10-graph/05_union_find_basic.py"
+  }
+}

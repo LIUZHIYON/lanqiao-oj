@@ -1,0 +1,90 @@
+{
+  "id": "p76_binary_answer_small",
+  "order": 76,
+  "title": "分跳绳",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "二分答案",
+    "贪心判定"
+  ],
+  "chapter": "第 8 章 12、30",
+  "source": "蓝桥杯风格算法练习",
+  "statement": "<p>有 <code>n</code> 根绳子，要剪出 <code>k</code> 根<strong>一样长</strong>的短绳，每根短绳的长度必须是整米数。绳子只能剪短，不能把两段接起来，剪完剩下的零头不要。</p><p>问每根短绳最长能是多少米。</p><p>比如 <code>4 11</code> 配长度 <code>8 2 1 10</code>：剪成 2 米一根能得 <code>4 + 1 + 0 + 5 = 10</code> 根，不够 11 根；剪成 1 米一根能得 21 根，够了，所以答案是 <code>1</code>。</p><p>绳子越短、能剪出的根数越多，「能不能凑够 k 根」这件事随长度单调，这就是可以二分的理由。</p>",
+  "input_format": "第一行两个整数 n 和 k（1 ≤ n ≤ 100，1 ≤ k ≤ 100000），n 是绳子根数，k 是要剪出的段数；第二行 n 个整数是每根绳子的长度（1 到 1000）。",
+  "output_format": "一行一个整数，是每段最长能是多少米；连 1 米一段都凑不够 k 段时输出 0。",
+  "examples": [
+    {
+      "input": "4 11\n8 2 1 10",
+      "output": "1\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 四根剪 11 段",
+      "input": "4 11\n8 2 1 10\n",
+      "expected": "1\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "只要一段 取最长那根",
+      "input": "3 1\n5 9 2\n",
+      "expected": "9\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "连 1 米都凑不够",
+      "input": "3 30\n5 9 2\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "全部等长",
+      "input": "5 10\n6 6 6 6 6\n",
+      "expected": "3\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "刚好除得尽",
+      "input": "2 6\n9 3\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "有一根特别长",
+      "input": "5 5\n1 1 1 1 100\n",
+      "expected": "20\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机 n=40",
+      "input": "40 300\n809 971 839 604 172 758 711 910 757 342 491 734 698 757 215 229 45 496 38 280 884 953 368 319 897 24 228 912 947 979 396 141 569 699 787 613 968 638 442 838\n",
+      "expected": "73\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大随机 n=100",
+      "input": "100 2000\n195 305 867 549 2 965 207 487 165 764 605 24 181 253 601 100 466 503 52 722 118 285 369 958 781 977 644 857 434 216 378 620 68 860 253 863 432 5 754 939 663 414 430 877 184 481 561 214 653 364 278 186 988 512 755 922 609 8 292 60 412 446 1 110 963 365 587 910 104 406 547 960 974 348 25 258 205 517 378 186 609 380 162 512 881 953 319 490 895 352 191 187 536 525 201 416 567 604 599 808\n",
+      "expected": "23\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>先写判定 <code>check(x)</code>：每根绳子能剪出 <code>a[i] // x</code> 段，加起来够不够 k 根，O(n)。</p><p>然后对长度二分。<code>lo, hi = 1, max(a)</code> 配 <code>mid = (lo + hi + 1) // 2</code>：够就把 lo 抬到 mid，不够就把 hi 压到 mid - 1。<strong>少写那个 +1 会死循环</strong>，这是二分答案最经典的坑。</p><p>先单独判一下长度 1 够不够：连 1 米都凑不出 k 根就输出 0。长度上限才一千，从 1 一个个试过去也能试出来，两种写法都对一遍再交。</p>",
+    "code": "\"\"\"p76 分跳绳（二分答案入门）：\nn 根绳子，要剪出 k 段一样长的整数长度绳子，不许拼接、不许浪费以外的要求，\n问每段最长能是多少；连长度 1 都凑不够 k 段时输出 0。\n\"长度越长，能剪出的段数越少\"，可行性随长度单调，所以可以对答案二分。\n这里长度上限只有一千，直接一个一个试也能试出来，两种写法都跑一遍核对。\n\"\"\"\nimport sys\n\n\ndef pieces(a, x):\n    return sum(v // x for v in a)\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    if not data:\n        return\n    n, k = int(data[0]), int(data[1])\n    a = [int(x) for x in data[2:2 + n]]\n    assert len(a) == n, \"绳子根数和 n 对不上\"\n    assert k >= 1, \"k 至少是 1\"\n\n    if pieces(a, 1) < k:              # 剪成 1 长都凑不够，怎么剪都不行\n        print(0)\n        return\n\n    lo, hi = 1, max(a)\n    while lo < hi:                    # mid = (lo + hi + 1) // 2 配 lo = mid，\n        mid = (lo + hi + 1) // 2      # 少写那个 +1 就会原地打转\n        if pieces(a, mid) >= k:\n            lo = mid\n        else:\n            hi = mid - 1\n\n    brute = 0                         # 一个一个长度试过去，小规模完全够\n    for x in range(1, max(a) + 1):\n        if pieces(a, x) >= k:\n            brute = x\n    assert lo == brute, \"二分答案与逐一试不一致\"\n\n    print(lo)\n\n\nmain()\n",
+    "output": "$ python p76_binary_answer_small.py\n输入：4 11\n8 2 1 10\n\n输出：1\r\n",
+    "reference": "code/ch08-sort-binary-greedy/12_bisect_answer_stones.py"
+  }
+}

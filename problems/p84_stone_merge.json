@@ -1,0 +1,90 @@
+{
+  "id": "p84_stone_merge",
+  "order": 84,
+  "title": "石子合并",
+  "type": "prog",
+  "difficulty": "较难",
+  "score": 25,
+  "tags": [
+    "区间动态规划",
+    "前缀和"
+  ],
+  "chapter": "第 7 章 14、30",
+  "source": "蓝桥杯常考题型（题意整理）",
+  "statement": "<p>一排 <code>n</code> 堆石子，每次只能挑<strong>相邻的</strong>两堆合成一堆，这一趟的费用等于这两堆的数量之和。一直合到只剩一堆为止，问总费用最小是多少。</p><p>比如 <code>1 2 3 4</code>：先合 1 和 2（费用 3）得到 <code>3 3 4</code>，再合前面两个 3（费用 6）得到 <code>6 4</code>，最后合一起（费用 10），总费用 <code>3 + 6 + 10 = 19</code>，这已经是最小的了。</p><p>只有一堆时不用合并，费用是 0。</p><p>合并的先后顺序不同，总费用差很多，所以要算最小值 —— 这是区间动态规划最典型的一道。</p>",
+  "input_format": "第一行一个整数 n（1 ≤ n ≤ 60），是堆数；第二行 n 个整数是每堆石子的数量，空格分隔（每堆 1 到 1000）。",
+  "output_format": "一行一个整数，是把全部合成一堆的最小总费用。",
+  "examples": [
+    {
+      "input": "4\n1 2 3 4",
+      "output": "19\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 1 2 3 4",
+      "input": "4\n1 2 3 4\n",
+      "expected": "19\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 n=1 不用合",
+      "input": "1\n10\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "只有两堆",
+      "input": "2\n4 5\n",
+      "expected": "9\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "全是 1",
+      "input": "6\n1 1 1 1 1 1\n",
+      "expected": "16\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "中间大两头小",
+      "input": "5\n1 1 100 1 1\n",
+      "expected": "210\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "一路变大",
+      "input": "7\n1 2 3 4 5 6 7\n",
+      "expected": "74\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机 n=25",
+      "input": "25\n35 28 76 9 8 68 81 33 42 23 32 74 19 75 8 69 36 16 67 68 73 33 23 37 74\n",
+      "expected": "5001\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大随机 n=60",
+      "input": "60\n107 436 995 404 489 822 142 499 644 137 904 962 133 105 960 567 341 704 498 639 30 260 768 434 629 278 617 37 659 187 712 238 538 487 696 528 555 782 451 612 602 104 268 695 580 303 47 712 260 964 572 626 709 479 939 550 980 448 378 384\n",
+      "expected": "177531\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>状态按区间列：<code>f[i][j]</code> = 把第 i 堆到第 j 堆合成一堆的最小费用。最后一步一定是把 <code>[i, k]</code> 和 <code>[k+1, j]</code> 这两大堆并起来，这一趟的费用就是第 i 到第 j 堆的总数，所以 <code>f[i][j] = min over k of (f[i][k] + f[k+1][j] + 区间和)</code>，<code>f[i][i] = 0</code>。</p><p>填表顺序按<strong>区间长度</strong>从小到大：短区间先算完，长区间才拿得到它需要的值。</p><p>区间和一定要用前缀和 O(1) 拿，别在里面再套一层求和循环。n = 60 时三层循环只有二十来万次，Python 毫无压力。核对：n 不超过 9 时枚举「先合哪一对」硬算一遍，跟 DP 比一次。</p>",
+    "code": "\"\"\"p84 石子合并（区间 DP 较难）：\n一排 n 堆石子，每次只能把相邻的两堆合成一堆，这一趟的费用是这两堆的数量之和，\n全部合成一堆为止，问总费用最小是多少。\n区间 DP：f[i][j] = 把第 i 到第 j 堆合成一堆的最小费用。\n最后一步一定是把 [i, k] 和 [k+1, j] 两块并起来，加上这一趟的费用（区间石子总数），\n所以 f[i][j] = min over k of f[i][k] + f[k+1][j] + sum(i..j)。\n按区间长度从小到大填表，短区间一定先算好。区间和用前缀和 O(1) 拿。\n\"\"\"\nimport sys\nfrom functools import lru_cache\n\n\ndef by_brute(piles):\n    \"\"\"独立核对：状态就是当前还剩的这几堆，枚举先合并哪一对相邻的。\"\"\"\n\n    @lru_cache(maxsize=None)\n    def solve(state):\n        if len(state) == 1:\n            return 0\n        best = None\n        for i in range(len(state) - 1):\n            merged = state[:i] + (state[i] + state[i + 1],) + state[i + 2:]\n            cost = state[i] + state[i + 1] + solve(merged)\n            if best is None or cost < best:\n                best = cost\n        return best\n\n    return solve(tuple(piles))\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    if not data:\n        return\n    n = int(data[0])\n    piles = [int(x) for x in data[1:1 + n]]\n    assert len(piles) == n, \"堆数和 n 对不上\"\n\n    pre = [0] * (n + 1)\n    for i in range(n):\n        pre[i + 1] = pre[i] + piles[i]\n\n    def total(i, j):                  # 第 i 到第 j 堆（下标从 0）的总数\n        return pre[j + 1] - pre[i]\n\n    f = [[0] * n for _ in range(n)]\n    for length in range(2, n + 1):    # 枚举区间长度，短的先算完\n        for i in range(0, n - length + 1):\n            j = i + length - 1\n            best = None\n            for k in range(i, j):     # 最后一步在哪条缝上合并\n                cost = f[i][k] + f[k + 1][j] + total(i, j)\n                if best is None or cost < best:\n                    best = cost\n            f[i][j] = best\n\n    ans = f[0][n - 1]\n    if n <= 9:                        # 只有 9 堆以内才敢用枚举合并顺序硬算\n        assert ans == by_brute(tuple(piles)), \"区间 DP 与枚举合并顺序不一致\"\n    print(ans)\n\n\nmain()\n",
+    "output": "$ python p84_stone_merge.py\n输入：4\n1 2 3 4\n\n输出：19\r\n",
+    "reference": "code/ch07-dp/30_practice_stone_merge.py"
+  }
+}

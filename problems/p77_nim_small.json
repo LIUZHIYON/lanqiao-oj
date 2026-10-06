@@ -1,0 +1,90 @@
+{
+  "id": "p77_nim_small",
+  "order": 77,
+  "title": "取石子判胜负",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "博弈",
+    "异或"
+  ],
+  "chapter": "第 13 章 12 / 第 12 章 20",
+  "source": "蓝桥杯常考题型（题意整理）",
+  "statement": "<p>桌上有 <code>k</code> 堆石子，两人轮流拿。每次只能挑一堆，从这一堆里至少拿走一个，全拿走也行。谁把最后一颗石子拿走谁赢。</p><p>两个人都绝顶聪明，给定每堆的数量，问先手是不是必胜：是输出 <code>1</code>，不是输出 <code>0</code>。</p><p>比如 <code>3 4 5</code>：3 ^ 4 ^ 5 异或出来是 2，不是 0，先手必胜，输出 <code>1</code>。而 <code>1 2 3</code> 异或是 0，先手必败，输出 <code>0</code>。</p>",
+  "input_format": "第一行一个整数 k（1 ≤ k ≤ 20），是堆数；第二行 k 个整数是每堆的石子数（0 到 100），空格分隔。",
+  "output_format": "一行一个整数：先手必胜输出 1，先手必败输出 0。",
+  "examples": [
+    {
+      "input": "3\n3 4 5",
+      "output": "1\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 3 4 5",
+      "input": "3\n3 4 5\n",
+      "expected": "1\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 k=1 有石子",
+      "input": "1\n7\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "一堆且是空堆",
+      "input": "1\n0\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "全是空堆",
+      "input": "4\n0 0 0 0\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "两堆相同必败",
+      "input": "2\n12 12\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "三堆异或为 0",
+      "input": "3\n1 2 3\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "含空堆的混合",
+      "input": "5\n0 3 0 5 6\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大随机 k=20",
+      "input": "20\n43 9 56 98 75 70 75 93 12 52 3 94 10 75 52 38 89 17 7 34\n",
+      "expected": "1\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>把每堆数量按位异或起来（Python 里的 <code>^</code>）：异或和是 0 就先手必败，非 0 就先手必胜。所有堆都是 0 时异或和也是 0，输出 0。</p><p>道理：异或为 0 的局面，无论怎么拿都会把它变成非 0；而异或非 0 的局面，总能一步拿回 0。所以被推到 0 局面那个人会先拿光最后一颗。</p><p>不敢信结论就自己验证：堆数不超过 3、每堆不超过 6 时，用 <code>functools.lru_cache</code> 递归判断「当前行动的人能不能赢」，跟异或的结论逐个对一遍。第 15 题那道五万堆的 Nim 用的就是同一个结论。</p>",
+    "code": "\"\"\"p77 取石子（Nim 入门）：k 堆石子，两人轮流，每次只能挑一堆、至少拿走一个，\n拿走最后一颗的人赢，两人都绝顶聪明，问先手是不是必胜：是输出 1，不是输出 0。\n结论：把每堆数量按位异或（Python 里的 ^），结果是 0 就先手必败，非 0 就先手必胜。\n怕记不住结论就用递归硬算一遍所有局面核对（堆少、每堆少的时候才跑得完）。\n\"\"\"\nimport sys\nfrom functools import lru_cache\n\n\ndef brute_wins(piles):\n    \"\"\"当前行动的人是否必胜：枚举所有可能的拿法，只要有一种把对手逼进必败局面就行。\"\"\"\n\n    @lru_cache(maxsize=None)\n    def win(state):\n        for i, v in enumerate(state):\n            for take in range(1, v + 1):\n                nxt = list(state)\n                nxt[i] -= take\n                if not win(tuple(nxt)):\n                    return True\n        return False                  # 一颗都拿不动，说明已经输了\n\n    return win(tuple(piles))\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    if not data:\n        return\n    k = int(data[0])\n    piles = [int(x) for x in data[1:1 + k]]\n    assert len(piles) == k, \"堆数对不上\"\n\n    x = 0\n    for v in piles:\n        x ^= v\n    ans = 1 if x != 0 else 0\n    if k <= 3 and max(piles) <= 6:     # 局面总数 7^3 量级，递归还算得动\n        assert ans == (1 if brute_wins(piles) else 0), \"异或结论与递归硬算不一致\"\n    print(ans)\n\n\nmain()\n",
+    "output": "$ python p77_nim_small.py\n输入：3\n3 4 5\n\n输出：1\r\n",
+    "reference": "code/ch12-math-date/20_game_nim_sg.py"
+  }
+}

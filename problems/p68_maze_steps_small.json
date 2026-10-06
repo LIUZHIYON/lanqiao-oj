@@ -1,0 +1,90 @@
+{
+  "id": "p68_maze_steps_small",
+  "order": 68,
+  "title": "迷宫最少步",
+  "type": "prog",
+  "difficulty": "入门",
+  "score": 25,
+  "tags": [
+    "BFS",
+    "网格"
+  ],
+  "chapter": "第 6 章 07、08 / 第 10 章 27",
+  "source": "蓝桥杯风格算法练习",
+  "statement": "<p>一张 <code>n</code> 行 <code>m</code> 列的小地图，<code>0</code> 是路、<code>1</code> 是墙。人站在左上角，每步只能上、下、左、右挪一格，不能穿墙，要走到右下角。</p><p>问最少走几步（起点算第 0 步，走一步到相邻格就是 1 步），走不到输出 <code>-1</code>。起点或终点本身是墙也算走不到。</p><p>地图最多 20x20 四百格，比第 5 题那张 250x250 的小得多，先把最小的这版跑顺。</p>",
+  "input_format": "第一行两个整数 n 和 m（1 ≤ n, m ≤ 20）；接下来 n 行，每行 m 个字符，只有 0（通路）和 1（墙），中间没有空格。起点是左上角，终点是右下角。",
+  "output_format": "一行一个整数，是最少步数；右下角走不到时输出 -1。",
+  "examples": [
+    {
+      "input": "4 4\n0000\n0000\n0000\n0000",
+      "output": "6\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 4x4 全通",
+      "input": "4 4\n0000\n0000\n0000\n0000\n",
+      "expected": "6\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 1x1 原地不动",
+      "input": "1 1\n0\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "起点是墙",
+      "input": "3 3\n100\n000\n000\n",
+      "expected": "-1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "终点是墙",
+      "input": "2 2\n00\n01\n",
+      "expected": "-1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "竖墙隔成两块走不到",
+      "input": "3 3\n010\n010\n010\n",
+      "expected": "-1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "只有一条蛇形走廊",
+      "input": "5 5\n00001\n11101\n10001\n10111\n10000\n",
+      "expected": "12\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "20x20 全通",
+      "input": "20 20\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n00000000000000000000\n",
+      "expected": "38\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机 20x20 保证可达",
+      "input": "20 20\n00000100110010011100\n00001110000011111100\n00001000000010000000\n10101000000110000001\n00100000101010011000\n00010000100100100000\n00011001100000001001\n10001010110000011001\n00001000111010001010\n01000001100000000001\n10000010001000010000\n00001001000110110111\n00000000101100100001\n10100101110001100000\n10010000101001001000\n00100110011000100001\n10101110000010001000\n00001010000001101000\n00001111000001100000\n01000001000100000000\n",
+      "expected": "38\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p><code>dist</code> 全部初始化 -1，起点置 0，用 <code>collections.deque</code>：每次 <code>popleft</code> 取最老的格子，把它四个能走的邻居距离写成 <code>dist[x][y] + 1</code> 再入队。</p><p>两个必须记住的点：用 <code>popleft</code> 而不是 <code>pop</code>（写成 pop 就变成深度优先，得到的不是最短步数）；入队时就写上距离，等于「进队即标记」，否则同一格会排队很多次。</p><p>最后 <code>dist[n-1][m-1]</code> 还是 -1 就是走不到。自己造一张 3x3 全通的图，答案是 4，先跟程序对一次。</p>",
+    "code": "\"\"\"p68 迷宫最少步（BFS 入门）：从左上角走到右下角，每步只能上下左右挪一格，\n墙（1）不能进，走不到输出 -1。\nBFS 一层一层往外扩，第一次踩到终点时的层数就是最短步数。\n两个要点：用 deque 的 popleft（用 pop 就退化成深度优先，得到的不是最短）；\n入队的时候就把距离写上（等出队才标记会让同一格排队好几次）。\n\"\"\"\nimport sys\nfrom collections import deque\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    n, m = int(data[0]), int(data[1])\n    grid = data[2:2 + n]\n    assert len(grid) == n and all(len(row) == m for row in grid), \"网格行列数对不上\"\n\n    if grid[0][0] == \"1\" or grid[n - 1][m - 1] == \"1\":\n        print(-1)                             # 起点或终点本身就是墙，一步也动不了\n        return\n\n    dist = [[-1] * m for _ in range(n)]\n    dist[0][0] = 0\n    q = deque([(0, 0)])\n    while q:\n        x, y = q.popleft()\n        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n            nx, ny = x + dx, y + dy\n            if 0 <= nx < n and 0 <= ny < m:\n                if grid[nx][ny] == \"0\" and dist[nx][ny] == -1:\n                    dist[nx][ny] = dist[x][y] + 1\n                    q.append((nx, ny))\n\n    ans = dist[n - 1][m - 1]\n    if n <= 10 and m <= 10 and ans >= 0:      # 小图再用每轮扩一层的写法核一遍\n        step = 0\n        frontier = [(0, 0)]\n        visited = {(0, 0)}\n        found = -1\n        while frontier:\n            nxt = []\n            for x, y in frontier:\n                if (x, y) == (n - 1, m - 1):\n                    found = step\n                    break\n                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):\n                    nx, ny = x + dx, y + dy\n                    if 0 <= nx < n and 0 <= ny < m and grid[nx][ny] == \"0\" \\\n                            and (nx, ny) not in visited:\n                        visited.add((nx, ny))\n                        nxt.append((nx, ny))\n            if found >= 0:\n                break\n            step += 1\n            frontier = nxt\n        assert found == ans, \"队列版与按层扩版的步数不一致\"\n    print(ans)\n\n\nmain()\n",
+    "output": "$ python p68_maze_steps_small.py\n输入：4 4\n0000\n0000\n0000\n0000\n\n输出：6\r\n",
+    "reference": "code/ch06-search/08_maze_bfs_path.py"
+  }
+}

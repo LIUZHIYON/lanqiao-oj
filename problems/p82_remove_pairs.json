@@ -1,0 +1,97 @@
+{
+  "id": "p82_remove_pairs",
+  "order": 82,
+  "title": "彩球消消乐",
+  "type": "prog",
+  "difficulty": "提高",
+  "score": 25,
+  "tags": [
+    "栈",
+    "字符串"
+  ],
+  "chapter": "第 11 章 41",
+  "source": "蓝桥杯风格算法练习",
+  "statement": "<p>一排彩球，每个球有一种颜色（用小写字母表示）。只要有两个<strong>相邻</strong>的球颜色相同，这两个就一起被拿走；拿走之后左右两边接上，如果又出现了相邻同色，继续消，一直到没有任何相邻同色为止。</p><p>比如 <code>abccba</code>：先把中间的 cc 消掉，剩下 abba，再消 bb 剩 aa，最后把 aa 消光，输出 <code>empty</code>。</p><p>再比如 <code>acaaab</code>：第 3、4 个球都是 a、正好相邻，把它们消掉，接上以后是 <code>acab</code>，已经没有相邻同色，输出 <code>acab</code>。</p><p>一次消掉两个之后位置会并拢，要反复看新的邻居 —— 这正是栈最擅长的事。</p>",
+  "input_format": "一行一个只由小写字母组成的字符串，长度 1 到 2000。同一个小写字母代表同一种颜色。",
+  "output_format": "一行，消到最后剩下的串（字符顺序不变）。全部消光了就输出单词 empty。",
+  "examples": [
+    {
+      "input": "abccba",
+      "output": "empty\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 abccba 消光",
+      "input": "abccba\n",
+      "expected": "empty\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最短串 一个字符",
+      "input": "a\n",
+      "expected": "a\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "没有相邻同色",
+      "input": "abcde\n",
+      "expected": "abcde\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "只有两个相同",
+      "input": "aa\n",
+      "expected": "empty\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "三个相同只消一对",
+      "input": "aaa\n",
+      "expected": "a\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "题面里的 acaab 那个例子",
+      "input": "acaaab\n",
+      "expected": "acab\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "一层套一层",
+      "input": "aabbbbaa\n",
+      "expected": "empty\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机 500 长度六种颜色",
+      "input": "ebadadcddaadccadaedcbaedfdccffbddabacbbedeaefbcdbbfbedcfeadeedfdecdbdeadffdcbbafdcfeeebeaefdbaeeadbdbfcbaacdabfeadbbcdaecebdeceabddbddbfccaebdfddaccaffebdeecbefadfcbbddfeefddbeddcddaaeceaecbefadfaebeaccfbdbabaddaeacaffbbcbebdfdbdabdeabcaefbeeefdfdaccbffbbceabcabcaaedcbbceccdcfdaecbbbbcaedddaacbbdcaefbfebdfefccfdfafaffadcdefecdafecdcbefdafeefbdeafdbaaadaebabdacefebffeebeddddefbcdaedeafeecadbafadcfdbdefddcfdfaecebedeefcffbbfefcadbccefffaeefeadfdbbefeaaeedbbabeffaffbfaecaaeffadedadbcccadffecbadcdeb\n",
+      "expected": "ebadadcdadaedcbaedfdbabacedeaefbcdfbedcfeafdecdbdeacafdcfebeaefdbdbdbfcbcdabfeadcdaecebdeceabfaebdfebdcbefadfcbececeaecbefadfaebeafbdbabeacacbebdfdbdabdeabcaefbefdfdabceabcabcededcfdaeaedcdcaefbfebdfedfafdcdefecdafecdcbefdabdeafdbadaebabdacefefbcdaedeafcadbafadcfdbdefcfdfaecebedfcfefcadbefafeadfdefedabeabfaeceadedadbcadecbadcdeb\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大随机 2000 长度十种颜色",
+      "input": "ffjjjahbaaieibegjbijdajgbcfigehbaaddfgjbajajicfeaahhdgjiccdecchfhhhiffggfbaieedgahjbidfgdggjiaajhcjgcjbcbfaaijgbbgfddcfbhhbcajaeieaibgahegjgidiifgdcebbeciechhbciaeeagejiaacigfeihahfjaeejaecjdfdcidjjdihgfafgfgfbfaehcbciedfdfgfghfccidfejffdeaccdcgjidgdajbfcgheeaihgiiiedbijcdhjgbhfdfdabcdghcecjdihdeadeegabfghhhcjjfefajieajbaedghihdehgafciadjhhbihiajfcfijdfiiecfbhbdffieeedaffjafaegchjehddcibaacbjfgagaieeagjfadbfeefbgdcfgccheacbacgbjfdhbdagfhghciddbfaigfdggaecfjbaabbigbddfebaaibhbebceibjiechabegijeaadidhhddabegeeigcifaigbcgefejifjbedgbdfgebaaahdchfhidicfebhijefichdhchgchgdjiahcbhehfgiehhjidgfhfcfhcbiidcgdbigebjddhgiejheahhiedbcdaaccdjebcajcfgdhgcfdhbifjebbacjfabbgbbeddbceegcbggjeffjdejgcigbgaihagddbifigjefcfhceeibajhddacehbbfcddeabjbjdccegageihfgjcideejjgfejbieigdchbeeaaabgcfchiaagjbhbhbffaijgffhhgiicbagceehhbadhddfcfdjeaadjffhfefjbdfeadhaiaighcbaeeaihajeeefdedfcbacgbcbehceddbajhfbeddcdhgdcfdeiiaieabddhedjiaicgcjhgjgehjfdiiahjiififjbefiachjegadchajegbhdjcijegeejbicdecffgdedjdjhhefhgejabdfdjghajjccfefdgaahdhahahafiaiibjgacdecifgdcgbgeeacjicaibjgfcibigjgbcaibjajfcgbjecagciidigejggddfcgdicfbgfdjgbejighbdebbhcdhehiaedeifbageaeiecchhhegjcijdcjijebcgjbcchbbbbjgighfhcifhhidaeffabfdgghiadeaebigddhhaecediijdhcaiddfjdcaffdbhjefdbadiibadhegbcddbcgdfcgjjhgciffchgjbhcgaeebddajafeejjhfifedgiafccbaiddhbebfjhbgghcicjbhjhjieaajbjgdfibfjjiafghifebcfiijehccheagdjeehfieehdfjgdcifibbbhjdchhfebjdehfiaceifcbfhijfgdajdaabfaidchbggbchcchiafdchghcgjfachajiejcdhehghdfbfidcjjbiagiaecibebbdgjdffcaeeegjhacfjiiaaddjhheiieajjgcdaibgfchidagegfdbbihebigdjbdhajehbgjhcgieaihegeiegjgjbcihbgfaeeeidgafaiabggahebiegcfhgiifeadddjgggddjcbecegjgedbgadbgccffadjfcjigaecjcbfeiaaccefffedgdddhgfbbbeaffefjghhfbajecagecibejhcfbadjiiheefbjdhhfjdbeihbjgjeejbcgdhgbedgiajfhfeejfibaiieaeggdhejbhcfhbjghcgdjcjecgehjbcaefbdehfhacbjegdchheafiigiecfbffaegfbagfefjfhdggbegiaadgfabdahiejbfbjgfefffacfgdefjabfdbeadggdafihiaijffaechcahjccbcegefgbghhdgggdihdfdfcbcjcdbgeeigidadajcdadifgfdgcheiafjhhaejcbfjhdaghegghgjbdfheagbdhjdafigjhdbfb\n",
+      "expected": "jahbieibegjbijdajgbcfigehbfgjbajajicfedgjidehfhifbaidgahjbidfgdjijhcjgcjbcbfijfcfcajaeieaibgahegjgidfgdiecbcigejicigfeihahfjajaecjdfdchgfafgfgfbfaehcbciedfdfgfghfidfejdeadcgjidgdajbfcghaihgiedbijcdhjgbhfdfdabcdghcecjdihdeadgabfghcfefajieajbaedghihdehgafciadjbihiajfcfijdfecfbhbdiedajafaegchjehcibcbjfgagaiagjfadgdcfgheacbacgbjfdhbdagfhghcibfaigfdaecfjbigbfebibhbebceibjiechabegijedidabegigcifaigbcgefejifjbedgbdfgebahdchfhidicfebhijefichdhchgchgdjiahcbhehfgiejidgfhfcfhcbdcgdbigebjhgiejheaiedbcjebcajcfgdhgcfdhbifjeacjfagebcgcbjejdejgcigbgaihagbifigjefcfhcibajhacehfceabjbjdegageihfgjcidgfejbieigdchbabgcfchigjbhbhbaijcbagcbadhfcfdjedjhfefjbdfeadhaiaighcbihajefdedfcbacgbcbehcebajhfbecdhgdcfdeaieabhedjiaicgcjhgjgehjfdahjfifjbefiachjegadchajegbhdjcijegjbicdecgdedjdjefhgejabdfdjghafefdghdhahahafiabjgacdecifgdcgbgacjicaibjgfcibigjgbcaibjajfcgbjecagcdigejfcgdicfbgfdjgbejighbdehcdhehiaedeifbageaeiehegjcijdcjijebcgjbhjgighfhcifidaeabfdhiadeaebigaecedjdhcaifjdcadbhjefdbadbadhegbcbcgdfcghgcichgjbhcgabajafhfifedgiafbaihbebfjhbhcicjbhjhjiejbjgdfibfiafghifebcfjagdjhfihdfjgdcifibhjdcfebjdehfiaceifcbfhijfgdajdbfaidchciafdchghcgjfachajiejcdhehghdfbfidcbiagiaecibedgjdcaegjhacfagcdaibgfchidagegfdihebigdjbdhajehbgjhcgieaihegeiegjgjbcihbgfaeidgafaiabahebiegcfhgfeadjgjcbecegjgedbgadbgadjfcjigaecjcbfeiefedgdhgfbeaefjgfbajecagecibejhcfbadjhfbjdfjdbeihbjgbcgdhgbedgiajfhfjfibaeaedhejbhcfhbjghcgdjcjecgehjbcaefbdehfhacbjegdceafgiecfbaegfbagfefjfhdbegidgfabdahiejbfbjgfefacfgdefjabfdbefihiaijaechcahjbcegefgbgdgdihdfdfcbcjcdbgigidadajcdadifgfdgcheiafjaejcbfjhdaghehgjbdfheagbdhjdafigjhdbfb\r\n",
+      "score": 6,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>一遍扫描：栈里存还没被消掉的球。新球来了，跟栈顶颜色相同就把栈顶弹掉（这一对同归于尽），不同就把新球压进去。扫完栈里从底到顶就是答案。</p><p>想不明白为什么这样对：反复「整行扫一遍消掉相邻同色」的结果其实和栈一样，只是最坏要扫上千遍。数据只有两千长度，把两种写法都跑一遍对答案，对上了就知道栈是对的。</p><p>注意答案是栈里剩下的字符按顺序拼起来（<code>''.join(stack)</code>），不用反转，栈底就是串的开头；全消光要输出 <code>empty</code> 而不是空行。</p>",
+    "code": "\"\"\"p82 彩球消消乐（栈提高）：\n一行彩球，只要有一对相邻的颜色相同，这两个就一起消失，消失后左右接上继续消，\n一直消到没有任何相邻相同为止，输出最后剩下的串（顺序不变）；全消光了输出 empty。\n一遍扫描就够：栈里存还没消掉的球，来的新球和栈顶相同就把栈顶弹掉（一对没了），\n不同就压栈。反复\"整行扫一遍找一对消掉\"的写法也能对，只是慢得多，\n所以这里拿它当小数据的核对。\n\"\"\"\nimport sys\n\n\ndef by_stack(s):\n    stack = []\n    for ch in s:\n        if stack and stack[-1] == ch:\n            stack.pop()               # 和栈顶凑成一对，同归于尽\n        else:\n            stack.append(ch)\n    return \"\".join(stack)\n\n\ndef by_naive(s):\n    \"\"\"一遍一遍整行扫，找到能消的相邻对就消掉，再从头扫。\"\"\"\n    cur = s\n    while True:\n        out = []\n        i = 0\n        changed = False\n        while i < len(cur):\n            if i + 1 < len(cur) and cur[i] == cur[i + 1]:\n                i += 2\n                changed = True\n            else:\n                out.append(cur[i])\n                i += 1\n        cur = \"\".join(out)\n        if not changed:\n            return cur\n\n\ndef main():\n    s = sys.stdin.readline().strip()\n    ans = by_stack(s)\n    if len(s) <= 600:                 # 串不长时再拿反复整行扫核一遍\n        assert ans == by_naive(s), \"栈的一遍扫描与反复整行扫不一致\"\n    print(ans if ans else \"empty\")\n\n\nmain()\n",
+    "output": "$ python p82_remove_pairs.py\n输入：abccba\n\n输出：empty\r\n",
+    "reference": "code/ch11-string/41_ex_remove_adjacent.py"
+  }
+}

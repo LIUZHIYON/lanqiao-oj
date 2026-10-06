@@ -1,0 +1,91 @@
+{
+  "id": "p80_catalan_count",
+  "order": 80,
+  "title": "合法括号串计数",
+  "type": "prog",
+  "difficulty": "提高",
+  "score": 25,
+  "tags": [
+    "卡特兰数",
+    "动态规划",
+    "组合数"
+  ],
+  "chapter": "第 12 章 05 / 第 9 章 15",
+  "source": "经典题型（题意整理）",
+  "statement": "<p>用 <code>n</code> 个 <code>(</code> 和 <code>n</code> 个 <code>)</code> 拼长度为 <code>2n</code> 的串，要求它是合法的括号序列：任意位置上读到的左括号都不少于右括号。问一共有多少种不同的拼法。</p><p>小的自己数得过来：<code>n = 1</code> 只有 <code>()</code>，1 种；<code>n = 2</code> 有 <code>()()</code> 和 <code>(())</code>，2 种；<code>n = 3</code> 有 5 种。</p><p>这串数 1、2、5、14、42…… 叫卡特兰数，蓝桥杯里进出栈顺序、不越界的走格子、多边形划分都是它，会推一份递推就够用了。</p>",
+  "input_format": "一行一个整数 n（1 ≤ n ≤ 30），是括号的对数。",
+  "output_format": "一行一个整数，是方案数（精确值，不取余）。",
+  "examples": [
+    {
+      "input": "3",
+      "output": "5\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 n=3",
+      "input": "3\n",
+      "expected": "5\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "最小 n=1",
+      "input": "1\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "n=2",
+      "input": "2\n",
+      "expected": "2\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "n=4 是 14",
+      "input": "4\n",
+      "expected": "14\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "n=5 是 42",
+      "input": "5\n",
+      "expected": "42\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "n=8",
+      "input": "8\n",
+      "expected": "1430\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "n=15",
+      "input": "15\n",
+      "expected": "9694845\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大 n=30",
+      "input": "30\n",
+      "expected": "3814986502092304\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>递推：盯住<em>最外面那一对左括号</em>。它里面可以包 <code>j</code> 对括号，剩下 <code>i-1-j</code> 对只能排在这对括号的右边，两边互不干扰，所以 <code>g[i] = Σ g[j] * g[i-1-j]</code>，其中 <code>g[0] = 1</code>。</p><p>公式是 <code>math.comb(2 * n, n) // (n + 1)</code>，一行就能算。两条路必须给出同一个数，n = 1、2、3、4 手都能数，先拿它们验。</p><p>n 到 30 时答案是十六位数，Python 大整数直接算，不用担心溢出；但别用浮点数除法取整，会算错。</p>",
+    "code": "\"\"\"p80 合法括号串计数（卡特兰数提高）：\n恰好 n 对括号能拼成多少个合法括号串，输出精确值。\n枚举最外面那对括号\"里面包了多长\"：设 g[i] 是长度 i 的合法串个数（i 只取偶数），\ng[0] = 1，第一对括号里有 j 对、后面跟着 i-1-j 对，\n所以 g[2i] = Σ g[2j] * g[2(i-1-j)]。\n这就是卡特兰数，闭式是 C(2n, n) / (n + 1)，两条路必须给同一个数。\n\"\"\"\nimport math\nimport sys\n\n\ndef main():\n    data = sys.stdin.read().split()\n    if not data:\n        return\n    n = int(data[0])\n    assert 1 <= n <= 30, \"n 的范围不对\"\n\n    g = [0] * (2 * n + 1)\n    g[0] = 1\n    for pairs in range(1, n + 1):     # pairs 对括号\n        total = 0\n        for inner in range(pairs):    # 最外那对里面装 inner 对，剩下 pairs-1-inner 对排在后面\n            total += g[2 * inner] * g[2 * (pairs - 1 - inner)]\n        g[2 * pairs] = total\n\n    formula = math.comb(2 * n, n) // (n + 1)\n    assert g[2 * n] == formula, \"递推与卡特兰公式不一致\"\n    print(g[2 * n])\n\n\nmain()\n",
+    "output": "$ python p80_catalan_count.py\n输入：3\n\n输出：5\r\n",
+    "reference": "code/ch12-math-date/05_catalan.py"
+  }
+}

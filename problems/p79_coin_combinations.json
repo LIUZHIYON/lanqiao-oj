@@ -1,0 +1,91 @@
+{
+  "id": "p79_coin_combinations",
+  "order": 79,
+  "title": "凑硬币方案数",
+  "type": "prog",
+  "difficulty": "提高",
+  "score": 25,
+  "tags": [
+    "动态规划",
+    "完全背包",
+    "计数"
+  ],
+  "chapter": "第 7 章 10、12",
+  "source": "蓝桥杯风格算法练习",
+  "statement": "<p>有 <code>k</code> 种面值的硬币，每种想用几枚都行，要正好凑出金额 <code>s</code>，问一共有多少种不同的凑法。</p><p>「凑法」只看<em>每种面值用了几枚</em>，跟拿硬币的先后没关系：1 枚 2 元加 2 枚 1 元，和 2 枚 1 元加 1 枚 2 元，是同一种凑法。</p><p>金额 <code>s = 0</code> 时答案是 1（一枚都不拿也算一种）；怎么凑都凑不出来时答案是 0。</p><p>比如面值 <code>1 2 5</code> 凑 5：可以用一张 5；可以 2+2+1；可以 2+1+1+1；可以五个 1，答案是 <code>4</code>。</p>",
+  "input_format": "第一行两个整数 k 和 s（1 ≤ k ≤ 20，0 ≤ s ≤ 200）；第二行 k 个互不相同的整数是硬币面值（1 到 200）。",
+  "output_format": "一行一个整数，是凑出金额 s 的方案数。",
+  "examples": [
+    {
+      "input": "3 5\n1 2 5",
+      "output": "4\r"
+    }
+  ],
+  "limits": {
+    "time_ms": 2000
+  },
+  "tests": [
+    {
+      "name": "样例 1 2 5 凑 5",
+      "input": "3 5\n1 2 5\n",
+      "expected": "4\r\n",
+      "score": 5,
+      "hidden": false
+    },
+    {
+      "name": "金额 0 只有一种",
+      "input": "3 0\n1 2 5\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "怎么都凑不出来",
+      "input": "2 3\n2 4\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "只有一种面值",
+      "input": "1 10\n5\n",
+      "expected": "1\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "面值都比金额大",
+      "input": "3 7\n11 13 17\n",
+      "expected": "0\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "同一组面值凑 11",
+      "input": "3 11\n1 2 5\n",
+      "expected": "11\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "随机 k=8 s=60",
+      "input": "8 60\n7 11 20 25 35 38 47 58\n",
+      "expected": "7\r\n",
+      "score": 2,
+      "hidden": true
+    },
+    {
+      "name": "最大 k=20 s=200",
+      "input": "20 200\n1 36 39 70 80 93 96 97 118 123 125 128 135 137 139 148 161 188 189 193\n",
+      "expected": "124\r\n",
+      "score": 8,
+      "hidden": true
+    }
+  ],
+  "solution": {
+    "idea": "<p>数方案的完全背包：<code>dp[j]</code> = 凑出金额 j 的凑法数，<code>dp[0] = 1</code>，外层枚举面值、内层金额<strong>从小到大</strong>，这样同一面值能被反复取用。</p><p>两个循环的先后是这题唯一的坑：外层是面值，数出来是凑法；外层换成金额，同一堆硬币会因为先后顺序被数好几遍，答案偏大。</p><p>核对：把每种面值用几枚递归硬枚举一遍（金额和面值种数都很小），跟背包的结果比一次。再拿面值 <code>1 2</code> 凑 4 这种能手算的例子验一次。</p>",
+    "code": "\"\"\"p79 凑零钱的方案数（完全背包计数提高）：\nk 种面额互不相同的硬币，每种想用几枚都行，问凑出金额 s 一共有多少种凑法。\n只看每种面额用了几枚，不看拿的先后，所以\"1 枚 2 角 + 2 枚 1 角\"和\n\"2 枚 1 角 + 1 枚 2 角\"只算同一种。\n外层循环必须枚举面额、内层枚举金额，这样数出来的才是凑法而不是顺序\n（外层换成金额就变成数顺序了，是这类题最容易踩的坑）。\ndp[j] = 凑出金额 j 的凑法数，dp[0] = 1（一枚都不拿也算一种）。\n\"\"\"\nimport sys\n\n\ndef main():\n    data = sys.stdin.buffer.read().split()\n    if not data:\n        return\n    k, s = int(data[0]), int(data[1])\n    coins = [int(x) for x in data[2:2 + k]]\n    assert len(coins) == k, \"面额个数和 k 对不上\"\n    assert len(set(coins)) == k, \"面额互不相同\"\n    coins.sort()\n\n    dp = [0] * (s + 1)\n    dp[0] = 1\n    for c in coins:                   # 外层是面额：一次只考虑一种\n        for j in range(c, s + 1):     # 金额从小到大：同一面额才能反复用\n            dp[j] += dp[j - c]\n\n    if s <= 30 and k <= 6:            # 小规模再按\"每种用几枚\"递归硬数一遍核对\n        cnt = 0\n\n        def dfs(idx, left):\n            nonlocal cnt\n            if idx == k:\n                if left == 0:\n                    cnt += 1\n                return\n            use = 0\n            while use * coins[idx] <= left:\n                dfs(idx + 1, left - use * coins[idx])\n                use += 1\n\n        dfs(0, s)\n        assert cnt == dp[s], \"背包计数与递归硬数不一致\"\n\n    print(dp[s])\n\n\nmain()\n",
+    "output": "$ python p79_coin_combinations.py\n输入：3 5\n1 2 5\n\n输出：4\r\n",
+    "reference": "code/ch07-dp/12_coin_change.py"
+  }
+}
