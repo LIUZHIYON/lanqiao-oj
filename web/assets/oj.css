@@ -350,18 +350,18 @@ section.pnav { padding: 10px 14px; }
 .pnav-link.done .pnav-state { color: var(--green); }
 .pnav-blank { color: var(--text-3); font-size: 13px; padding: 6px 4px; min-width: 120px; }
 .pnav-mid { display: flex; align-items: center; gap: 10px; margin-left: auto; margin-right: auto; }
-/* 题单抽屉（题目页右下角「☰ 题单」） */
-.d-fab { position: fixed; right: 18px; bottom: 18px; z-index: 60; box-shadow: 0 2px 10px rgba(0, 0, 0, .18); }
+/* 题单抽屉（题目页左下角「☰ 题单」，也可 Ctrl+B 开关） */
+.d-fab { position: fixed; left: 18px; bottom: 18px; z-index: 60; box-shadow: 0 2px 10px rgba(0, 0, 0, .18); }
 .drawer-mask {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 25, 45, .35);
   opacity: 0; pointer-events: none; transition: opacity .18s; z-index: 70;
 }
 .drawer-mask.open { opacity: 1; pointer-events: auto; }
 .drawer {
-  position: fixed; top: 0; right: 0; height: 100%; width: 350px; max-width: 92vw;
-  background: var(--card); border-left: 1px solid var(--line-d);
-  box-shadow: -6px 0 24px rgba(20, 35, 60, .16);
-  transform: translateX(102%); transition: transform .2s ease; z-index: 80;
+  position: fixed; top: 0; left: 0; height: 100%; width: 350px; max-width: 92vw;
+  background: var(--card); border-right: 1px solid var(--line-d);
+  box-shadow: 6px 0 24px rgba(20, 35, 60, .16);
+  transform: translateX(-102%); transition: transform .2s ease; z-index: 80;
   display: flex; flex-direction: column; padding: 12px 12px 10px;
 }
 .drawer.open { transform: translateX(0); }
@@ -400,7 +400,7 @@ section.pnav { padding: 10px 14px; }
 .d-star { color: var(--orange); font-size: 13px; }
 @media (max-width: 620px) {
   .drawer { width: 100%; max-width: 100%; }
-  .d-fab { bottom: 14px; right: 14px; }
+  .d-fab { bottom: 14px; left: 14px; }
 }
 
 @media (max-width: 760px) {
