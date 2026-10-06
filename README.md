@@ -4,13 +4,27 @@
 每题都带题解和参考答案。判题用的是**本机 Python 真实执行**，所以超时、报错、输出不符都能如实反馈，
 和考试时的行为一致。
 
-## 启动
+**一句话概况**：84 道题（72 编程 + 12 填空）· 568 个测试点 · 零第三方依赖 · 只监听 `127.0.0.1`。
 
-双击后黑窗口会打印**实际使用的地址**，浏览器自动打开它。
+## 一分钟上手
 
-**端口被占用怎么办**：这台机器上 8000 端口已经有一个 Flask 程序在用，所以本 OJ 会自动往后找
-（8010 → 8020 → …），窗口里会显示「端口 8000 已被其它程序占用，自动改用 8010」，
-按那个地址用即可。想固定端口就显式指定：
+```bat
+git clone https://github.com/LIUZHIYON/lanqiao-oj.git
+cd lanqiao-oj
+start.bat                       rem 或者 python server\app.py
+```
+
+需要 **Python 3.10+**（只用标准库，不用 pip 装任何东西）。启动后黑窗口会打印实际地址，
+浏览器自动打开。第一次运行会自动建 `data/oj.db`，进度从零开始。
+
+> **隐私**：做题记录、收藏、模拟赛成绩全部只存在本机 `data/oj.db` 里，已在 `.gitignore` 中排除，
+> 不会被提交或推送；代码里也没有任何上报网络的地方。
+
+## 启动细节
+
+**端口被占用怎么办**：OJ 会按 `首选 → 8000 → 8010 → 8020 → 8030 → 8050 → 8080 → 8123 → 8888`
+的顺序自动往后找，窗口里会显示「端口 8000 已被其它程序占用，自动改用 8010」，按那个地址用即可。
+想固定端口就显式指定：
 
 ```bat
 python server\app.py --port 9000
@@ -97,7 +111,7 @@ lanqiao-oj/
 ├── problems/                  题库，一题一个 JSON（84 道）
 ├── generator/                 题库构建与自检
 │   ├── reference/             每题的参考解（构建时用它生成标准输出）
-│   ├── extra/                 追加题库：easy_batch.py / mid_batch.py / _TEMPLATE.py
+│   ├── extra/                 追加题库（插件式）：easy_batch / mid_batch / bridge_batch / _TEMPLATE
 │   ├── build_problems.py      跑参考解 → 生成 problems/*.json 的 expected
 │   └── self_check.py          用参考解判自己的题，必须全 AC
 ├── data/                      运行时生成：oj.db（记录）与 runs/（判题临时目录）
@@ -121,8 +135,15 @@ python generator\self_check.py        rem 参考解自判，全部 AC 才算题�
 
 关掉服务后删除 `data/oj.db`，或在「我的提交」页面点「清空练习记录」，所有提交历史与统计归零。
 
-## 和讲义配套用
+## 题源与答案口径
 
-题库的每题都标了讲义章节（`chapter` 字段）与参考脚本路径（`solution.reference`）。
-不会做时先回 `D:\WorkBuddy-cn_workspace\lanqiao-cup-python\` 看对应章节，
-判题结果里的 RE/CE 详情也能直接告诉你哪一行错了。
+题目以蓝桥杯 Python 组历年真题与高频考点为蓝本重新命题/改编，填空与编程的答案**不是手写的**：
+每道编程题在 `generator/reference/` 有一个参考解，构建时真实运行生成标准输出，且每个参考解都配了
+第二条独立算法互验；填空题的 `generator/fill_scripts/` 脚本负责算出答案。
+`generator/self_check.py` 会拿参考解去判自己出的题，全 AC 才算这批题可用。
+
+## 配套讲义
+
+每题标了讲义章节（`chapter` 字段）与参考脚本路径（`solution.reference`）。配套讲义是另一个本地项目
+`lanqiao-cup-python`（零基础冲刺讲义，17 页 HTML + A5 PDF），两者按章节号互相对应；
+没有讲义也不影响使用，题解在每个题目页的「题解」区里就有。判题结果里的 RE/CE 详情会告诉你哪一行错了。
