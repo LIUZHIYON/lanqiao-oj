@@ -847,6 +847,11 @@
     DRAW.open = !!open;
     dPanel.classList.toggle('open', DRAW.open);
     dMask.classList.toggle('open', DRAW.open);
+    var tg = document.getElementById('dToggle');
+    if (tg) {
+      tg.classList.toggle('on', DRAW.open);
+      tg.setAttribute('aria-expanded', DRAW.open ? 'true' : 'false');
+    }
     if (DRAW.open) {
       paintTabs(); paintList();
       if (dSearch && dSearch.focus) { try { dSearch.focus(); } catch (e) { } }
@@ -855,13 +860,16 @@
   }
 
   function initDrawer(pid) {
-    if (!document.getElementById('dFab')) {
-      var fab = el('button', {
-        class: 'btn d-fab', type: 'button', id: 'dFab', text: '☰ 题单',
+    if (!document.getElementById('dToggle')) {
+      var btn = el('button', {
+        class: 'd-toggle', type: 'button', id: 'dToggle', text: '☰ 题单',
         title: '展开题库题单，直接挑题做（Ctrl + B）',
+        'aria-expanded': 'false',
         onclick: function () { setDrawer(!DRAW.open); }
       });
-      document.body.appendChild(fab);
+      /* 放在页头最左边：打开题目页时视线正好落在这里，比角落里的悬浮按钮好找 */
+      var head = document.querySelector('.topbar-in');
+      if (head) { head.insertBefore(btn, head.firstChild); } else { document.body.appendChild(btn); }
       document.addEventListener('keydown', function (ev) {
         if (ev.ctrlKey && (ev.key === 'b' || ev.key === 'B')) { ev.preventDefault(); setDrawer(!DRAW.open); }
         if (ev.key === 'Escape' && DRAW.open) { setDrawer(false); }

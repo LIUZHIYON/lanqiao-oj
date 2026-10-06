@@ -320,6 +320,21 @@
       ft.className = 'footer';
       ft.textContent = '练习记录只保存在本机 data/oj.db，不上传任何地方。服务启动命令：python server/app.py';
     }
+    syncHeadH();
+  }
+
+  /* 页头改成 sticky 后，右侧粘住的答题卡片要让开它。窄屏换行会把页头撑高，
+     所以按实测高度写进 CSS 变量，而不是猜一个固定值。 */
+  function syncHeadH() {
+    var inn = document.querySelector('.topbar-in');
+    if (!inn) { return; }
+    function apply() {
+      var h = Math.round(inn.getBoundingClientRect().height) + 3;   /* 3 = 页头下边框 */
+      document.documentElement.style.setProperty('--head-h', h + 'px');
+    }
+    apply();
+    window.addEventListener('resize', apply);
+    window.addEventListener('load', apply);
   }
 
   function setNavStat(solved, total) {
